@@ -7,13 +7,20 @@ import (
 
 // Network is a node in the network
 type Network struct {
-	IP   string
-	Port int
-	Conn *net.UDPConn
+	IP        string
+	Port      int
+	Conn      *net.UDPConn
+	MessageCh chan Message // Channel for UDP messages
 }
 
-// Listen listens on a UDP address and returns the received message and the contact's address.
-func (network *Network) Listen() (string, string, error) {
+// Message is a simple struct to hold a message and its sender's address.
+type Message struct {
+	Content string
+	Address string
+}
+
+// Listen listens on a UDP address and stores incoming messages in the channel.
+func (network *Network) Listen() error {
 	// Create a UDPAddr based on the Network's IP and Port
 	addr := net.UDPAddr{
 		IP:   net.ParseIP(network.IP),
@@ -24,177 +31,56 @@ func (network *Network) Listen() (string, string, error) {
 	conn, err := net.ListenUDP("udp", &addr)
 	if err != nil {
 		log.Printf("Error starting UDP listener: %v\n", err)
-		return "", "", err
+		return err
 	}
+	network.Conn = conn // Store the connection for sending messages
 	defer conn.Close()
 
-	// Assign the connection to the network's Conn field
-	network.Conn = conn
+	// Loop to continuously listen for incoming messages
+	for {
+		buffer := make([]byte, 1024)
+		n, remoteAddr, err := conn.ReadFromUDP(buffer)
+		if err != nil {
+			log.Printf("Error reading from UDP connection: %v", err)
+			continue
+		}
 
-	buffer := make([]byte, 1024)
+		message := string(buffer[:n])
+		contactAddress := remoteAddr.String()
+		log.Printf("Network received message: %s from %s", message, contactAddress)
 
-	// Read incoming UDP message
-	n, remoteAddr, err := conn.ReadFrom(buffer)
-	if err != nil {
-		log.Printf("Error reading from UDP connection: %v", err)
-		return "", "", err
+		// Send the message to the channel for the Kademlia class to process
+		network.MessageCh <- Message{Content: message, Address: contactAddress}
 	}
 
-	message := string(buffer[:n])
-	contactAddress := remoteAddr.String()
+	return nil
+}
 
-	return message, contactAddress, nil
+// sendMessage is a helper method to send messages to a contact using the existing UDP connection.
+func (network *Network) sendMessage(contact *Contact, message string) {
+	// Resolve the contact's address
+	addr, err := net.ResolveUDPAddr("udp", contact.Address)
+	if err != nil {
+		log.Printf("Error resolving UDP address: %v", err)
+		return
+	}
+
+	// Use the existing connection to send the message
+	_, err = network.Conn.WriteToUDP([]byte(message), addr)
+	if err != nil {
+		log.Printf("Error sending message to %s: %v", contact.Address, err)
+		return
+	}
+
+	log.Printf("Network sent message '%s' to %s", message, contact.Address)
 }
 
 // SendPingMessage sends a "ping" message to the contact.
 func (network *Network) SendPingMessage(contact *Contact) {
-	// Parse the contact's address (expected to be in "IP:Port" format)
-	addr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		log.Printf("Error resolving UDP address: %v", err)
-		return
-	}
-
-	// Dial UDP to the contact's address
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		log.Printf("Error dialing UDP: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Send the "ping" message
-	_, err = conn.Write([]byte("ping"))
-	if err != nil {
-		log.Printf("Error sending ping: %v", err)
-		return
-	}
+	network.sendMessage(contact, "ping")
 }
 
 // SendPongMessage sends a "pong" message to the contact.
 func (network *Network) SendPongMessage(contact *Contact) {
-	// Parse the contact's address to send the pong message
-	addr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		log.Printf("Error resolving address: %v", err)
-		return
-	}
-
-	// Dial UDP to the contact's address
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		log.Printf("Error dialing UDP: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Send the "pong" message
-	_, err = conn.Write([]byte("pong"))
-	if err != nil {
-		log.Printf("Error sending pong: %v", err)
-	}
-}
-
-// SendFindContactMessage sends a "FIND_NODE" message to a contact requesting nodes close to a target ID.
-func (network *Network) SendFindContactMessage(contact *Contact, targetNodeID string) {
-	// Parse the contact's address (expected to be in "IP:Port" format)
-	addr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		log.Printf("Error resolving UDP address: %v", err)
-		return
-	}
-
-	// Dial UDP to the contact's address
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		log.Printf("Error dialing UDP: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Send the "FIND_NODE" message, including the targetNodeID
-	message := "FIND_NODE:" + targetNodeID
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		log.Printf("Error sending FIND_NODE message: %v", err)
-		return
-	}
-
-	// Buffer to read the response
-	buffer := make([]byte, 1024)
-	n, _, err := conn.ReadFromUDP(buffer)
-	if err != nil {
-		log.Printf("Error receiving FIND_NODE response: %v", err)
-		return
-	}
-
-	response := string(buffer[:n])
-	log.Printf("Received response: %s", response)
-	// You would then parse the response for the closest contacts
-}
-
-// SendFindDataMessage sends a "FIND_DATA" message to search for data by hash.
-func (network *Network) SendFindDataMessage(contact *Contact, hash string) {
-	// Parse the contact's address (expected to be in "IP:Port" format)
-	addr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		log.Printf("Error resolving UDP address: %v", err)
-		return
-	}
-
-	// Dial UDP to the contact's address
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		log.Printf("Error dialing UDP: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Send the "FIND_DATA" message, including the hash of the data
-	message := "FIND_DATA:" + hash
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		log.Printf("Error sending FIND_DATA message: %v", err)
-		return
-	}
-
-	// Buffer to read the response
-	buffer := make([]byte, 1024)
-	n, _, err := conn.ReadFromUDP(buffer)
-	if err != nil {
-		log.Printf("Error receiving FIND_DATA response: %v", err)
-		return
-	}
-
-	response := string(buffer[:n])
-	log.Printf("Received data or node list: %s", response)
-	// You would then parse the response for the data or the closest nodes to the hash
-}
-
-// SendStoreMessage sends a "STORE" message to store data on a contact.
-func (network *Network) SendStoreMessage(contact *Contact, data []byte, hash string) {
-	// Parse the contact's address (expected to be in "IP:Port" format)
-	addr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		log.Printf("Error resolving UDP address: %v", err)
-		return
-	}
-
-	// Dial UDP to the contact's address
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		log.Printf("Error dialing UDP: %v", err)
-		return
-	}
-	defer conn.Close()
-
-	// Send the "STORE" message, including the hash of the data
-	message := "STORE:" + hash + ":" + string(data)
-	_, err = conn.Write([]byte(message))
-	if err != nil {
-		log.Printf("Error sending STORE message: %v", err)
-		return
-	}
-
-	log.Printf("Stored data on contact %s", contact.Address)
+	network.sendMessage(contact, "pong")
 }

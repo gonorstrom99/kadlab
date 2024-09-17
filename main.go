@@ -21,30 +21,35 @@ func main() {
 	routingTable := kademlia.NewRoutingTable(contact)
 	secondRoutingTable := kademlia.NewRoutingTable(secondContact)
 
-	// Create Networks for the two nodes
-	network := kademlia.Network{
-		IP:   "127.0.0.1",
-		Port: 8000, // Port for the first node
+	// Create message channels for each network
+	messageCh1 := make(chan kademlia.Message)
+	messageCh2 := make(chan kademlia.Message)
+
+	// Create Networks for the two nodes with message channels
+	network1 := &kademlia.Network{ // Use pointers
+		IP:        "127.0.0.1",
+		Port:      8000,
+		MessageCh: messageCh1,
 	}
-	secondNetwork := kademlia.Network{
-		IP:   "127.0.0.1",
-		Port: 8001, // Port for the second node
+	network2 := &kademlia.Network{ // Use pointers
+		IP:        "127.0.0.1",
+		Port:      8001,
+		MessageCh: messageCh2,
 	}
 
-	// Create Kademlia instances for the two nodes
-	firstKademliaNode := kademlia.NewKademlia(network, *routingTable)
-	secondKademliaNode := kademlia.NewKademlia(secondNetwork, *secondRoutingTable)
+	// Create Kademlia instances for the two nodes with network and routing table references
+	firstKademliaNode := kademlia.NewKademlia(network1, routingTable)
+	secondKademliaNode := kademlia.NewKademlia(network2, secondRoutingTable)
 
 	// Start listening on the networks in separate goroutines
-	go func() {
-		firstKademliaNode.Listen() // Start listening on the first node
-	}()
+	go network1.Listen()
+	go network2.Listen()
 
-	go func() {
-		secondKademliaNode.Listen() // Start listening on the second node
-	}()
+	// Start the Kademlia nodes to process messages
+	go firstKademliaNode.Start()
+	go secondKademliaNode.Start()
 
-	// Give some time for the nodes to start listening
+	// Give some time for the nodes to start listening and processing messages
 	time.Sleep(1 * time.Second)
 
 	// Send a ping message from the second node to the first node
@@ -52,10 +57,7 @@ func main() {
 	secondKademliaNode.Network.SendPingMessage(&contact)
 
 	// Give some time for the ping-pong interaction to complete
-	time.Sleep(1 * time.Second)
+	time.Sleep(4 * time.Second)
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
-
-	time.Sleep(3 * time.Second)
-
 }
