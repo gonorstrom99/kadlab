@@ -9,7 +9,7 @@ import (
 // Network is a node in the network
 type Network struct {
 	Conn      *net.UDPConn
-	MessageCh chan Message // Channel for UDP messages
+	MessageCh chan Message
 }
 
 // Message is a simple struct to hold a message and its sender's address.
