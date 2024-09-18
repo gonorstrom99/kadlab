@@ -9,6 +9,7 @@ import (
 type Network struct {
 	IP        string
 	Port      int
+	ID        string
 	Conn      *net.UDPConn
 	MessageCh chan Message // Channel for UDP messages
 }
