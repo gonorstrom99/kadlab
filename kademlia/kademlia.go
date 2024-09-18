@@ -30,15 +30,13 @@ func (kademlia *Kademlia) Listen() error {
 	return nil
 }
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	candidates=routingtable.me.ContactCandidates
+	//TODO
+	/*candidates=routingtable.me.ContactCandidates
 	closestNode := kademlia.routingtable.me
 	candidates.append(routingtable.FindClosestContacts(target.ID, 3))
 	if (candidates[0].Less(closestNode)){
 		closestNode = candidates[0]
-	}
-
-	//TODO
-	/*add rest of function, */
+	} */
 
 }
 

@@ -11,7 +11,7 @@ type Network struct {
 
 func (n *Network) Listen(Node Contact) error {
 	//addr := fmt.Sprintf("%s:%d", Node.IP, Node.Port)
-	udpAddr, err := net.ResolveUDPAddr("udp", Node.routingtable.me.Address) //addr)
+	udpAddr, err := net.ResolveUDPAddr("udp", Node.Address) //addr)
 
 	//udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
@@ -39,7 +39,7 @@ func (n *Network) Listen(Node Contact) error {
 }
 func (n *Network) Ping(target Contact) error {
 	//targetAddr := fmt.Sprintf("%s:%d", target.IP, target.Port)
-	udpAddr, err := net.ResolveUDPAddr("udp", target.routingtable.me.Address)
+	udpAddr, err := net.ResolveUDPAddr("udp", target.Address)
 	if err != nil {
 		log.Printf("Failed to resolve UDP address: %v", err)
 		return err
@@ -51,7 +51,7 @@ func (n *Network) Ping(target Contact) error {
 		log.Printf("Failed to send ping: %v", err)
 		return err
 	}
-	log.Printf("Ping sent to %s", target.routingtable.me.Address)
+	log.Printf("Ping sent to %s", target.Address)
 	return nil
 }
 
