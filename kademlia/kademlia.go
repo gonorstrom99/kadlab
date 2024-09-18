@@ -19,6 +19,12 @@ func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
 // Start starts the Kademlia node, processing incoming messages from the network channel
 func (kademlia *Kademlia) Start() {
 	// Start processing messages from the network's channel
+	go func() {
+		err := kademlia.Network.Listen()
+		if err != nil {
+			log.Printf("Error in network listener: %v", err)
+		}
+	}()
 	go kademlia.processMessages()
 }
 
@@ -31,11 +37,9 @@ func (kademlia *Kademlia) processMessages() {
 		// Handle different message types
 		switch msg.Content {
 		case "ping":
-			kademlia.Network.SendPongMessage(contact) // Respond with "pong"
+			kademlia.handlePing(contact) // Respond with "pong"
 		case "pong":
-			// Handle "pong" message (e.g., update routing table)
-			log.Printf("Received pong from %s", msg.Address)
-			// Add more cases for other Kademlia-specific messages
+			kademlia.handlePong(contact)
 		}
 	}
 }

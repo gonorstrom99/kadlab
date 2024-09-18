@@ -41,10 +41,6 @@ func main() {
 	firstKademliaNode := kademlia.NewKademlia(network1, routingTable)
 	secondKademliaNode := kademlia.NewKademlia(network2, secondRoutingTable)
 
-	// Start listening on the networks in separate goroutines
-	go network1.Listen()
-	go network2.Listen()
-
 	// Start the Kademlia nodes to process messages
 	go firstKademliaNode.Start()
 	go secondKademliaNode.Start()

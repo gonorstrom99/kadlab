@@ -47,7 +47,7 @@ func (network *Network) Listen() error {
 
 		message := string(buffer[:n])
 		contactAddress := remoteAddr.String()
-		log.Printf("Network received message: %s from %s", message, contactAddress)
+		//log.Printf("Network received message: %s from %s", message, contactAddress)
 
 		// Send the message to the channel for the Kademlia class to process
 		network.MessageCh <- Message{Content: message, Address: contactAddress}
@@ -72,7 +72,7 @@ func (network *Network) sendMessage(contact *Contact, message string) {
 		return
 	}
 
-	log.Printf("Network sent message '%s' to %s", message, contact.Address)
+	//log.Printf("Network sent message '%s' to %s", message, contact.Address)
 }
 
 // SendPingMessage sends a "ping" message to the contact.
