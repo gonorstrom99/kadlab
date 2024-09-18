@@ -20,7 +20,7 @@ func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
 func (kademlia *Kademlia) Start() {
 	// Start processing messages from the network's channel
 	go func() {
-		err := kademlia.Network.Listen()
+		err := kademlia.Network.Listen(kademlia.RoutingTable.me)
 		if err != nil {
 			log.Printf("Error in network listener: %v", err)
 		}
@@ -31,15 +31,16 @@ func (kademlia *Kademlia) Start() {
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
 	for msg := range kademlia.Network.MessageCh {
-		log.Printf("Kademlia processing message: '%s' from %s", msg.Content, msg.Address)
-		contact := &Contact{Address: msg.Address}
+		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Content, msg.Address, msg.ID)
 
+		contact := &Contact{ID: NewKademliaID(msg.ID), Address: msg.Address} // Assuming Contact can store the ID as a string
 		// Handle different message types
 		switch msg.Content {
 		case "ping":
-			kademlia.handlePing(contact) // Respond with "pong"
+			kademlia.Network.SendPongMessage(contact) // Respond with "pong"
 		case "pong":
-			kademlia.handlePong(contact)
+			// Handle "pong" message (e.g., update routing table)
+			log.Printf("Received pong from %s", msg.Address)
 		}
 	}
 }

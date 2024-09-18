@@ -3,13 +3,11 @@ package kademlia
 import (
 	"log"
 	"net"
+	"strings"
 )
 
 // Network is a node in the network
 type Network struct {
-	IP        string
-	Port      int
-	ID        string
 	Conn      *net.UDPConn
 	MessageCh chan Message // Channel for UDP messages
 }
@@ -18,18 +16,16 @@ type Network struct {
 type Message struct {
 	Content string
 	Address string
+	ID      string
 }
 
 // Listen listens on a UDP address and stores incoming messages in the channel.
-func (network *Network) Listen() error {
+func (network *Network) Listen(contact Contact) error {
 	// Create a UDPAddr based on the Network's IP and Port
-	addr := net.UDPAddr{
-		IP:   net.ParseIP(network.IP),
-		Port: network.Port,
-	}
+	udpAddr, err := net.ResolveUDPAddr("udp", contact.Address)
 
 	// Start listening on the provided address
-	conn, err := net.ListenUDP("udp", &addr)
+	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Printf("Error starting UDP listener: %v\n", err)
 		return err
@@ -46,15 +42,25 @@ func (network *Network) Listen() error {
 			continue
 		}
 
+		// Convert the buffer into a string message
 		message := string(buffer[:n])
 		contactAddress := remoteAddr.String()
-		//log.Printf("Network received message: %s from %s", message, contactAddress)
 
-		// Send the message to the channel for the Kademlia class to process
-		network.MessageCh <- Message{Content: message, Address: contactAddress}
+		// Split the message to extract the ID and the actual content
+		parts := strings.SplitN(message, ":", 2)
+		if len(parts) != 2 {
+			log.Printf("Invalid message format received from %s: %s", contactAddress, message)
+			continue
+		}
+
+		// Extract ID and content
+		senderID := parts[0]
+		content := parts[1]
+
+		// Log and send the message to the channel for processing
+		//log.Printf("Network received message: %s from %s (ID: %s)", content, contactAddress, senderID)
+		network.MessageCh <- Message{ID: senderID, Content: content, Address: contactAddress}
 	}
-
-	return nil
 }
 
 // sendMessage is a helper method to send messages to a contact using the existing UDP connection.
@@ -66,6 +72,7 @@ func (network *Network) sendMessage(contact *Contact, message string) {
 		return
 	}
 
+	message = contact.ID.String() + ":" + message
 	// Use the existing connection to send the message
 	_, err = network.Conn.WriteToUDP([]byte(message), addr)
 	if err != nil {
