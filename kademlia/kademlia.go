@@ -30,22 +30,16 @@ func (kademlia *Kademlia) Listen() error {
 	return nil
 }
 func (kademlia *Kademlia) LookupContact(target *Contact) {
-	/*shortlist[]=FindClosestContacts(target.ID, 3)
-	if shortlist[0]<closestNode{
-		closestNode=shortlist[0]
+	candidates=routingtable.me.ContactCandidates
+	closestNode := kademlia.routingtable.me
+	candidates.append(routingtable.FindClosestContacts(target.ID, 3))
+	if (candidates[0].Less(closestNode)){
+		closestNode = candidates[0]
 	}
-	else{
 
-	}
-	
-	if (closestNode == target){
-		return closestNode
-	}
-	else {
-		for i=0, (i<shortlist[].len()), i++{
-			LookupContact(target, closestNode)
-		}
-	}*/
+	//TODO
+	/*add rest of function, */
+
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
