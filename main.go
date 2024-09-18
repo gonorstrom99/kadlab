@@ -27,13 +27,13 @@ func main() {
 
 	// Create Networks for the two nodes with message channels
 	network1 := &kademlia.Network{ // Use pointers
-		IP:        "127.0.0.1",
-		Port:      8000,
+		// IP:        "127.0.0.1",
+		// Port:      8000,
 		MessageCh: messageCh1,
 	}
 	network2 := &kademlia.Network{ // Use pointers
-		IP:        "127.0.0.1",
-		Port:      8001,
+		// IP:        "127.0.0.1",
+		// Port:      8001,
 		MessageCh: messageCh2,
 	}
 
@@ -42,8 +42,8 @@ func main() {
 	secondKademliaNode := kademlia.NewKademlia(network2, secondRoutingTable)
 
 	// Start the Kademlia nodes to process messages
-	go firstKademliaNode.Start()
-	go secondKademliaNode.Start()
+	firstKademliaNode.Start()
+	secondKademliaNode.Start()
 
 	// Give some time for the nodes to start listening and processing messages
 	time.Sleep(1 * time.Second)

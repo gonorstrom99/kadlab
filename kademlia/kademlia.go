@@ -20,7 +20,7 @@ func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
 func (kademlia *Kademlia) Start() {
 	// Start processing messages from the network's channel
 	go func() {
-		err := kademlia.Network.Listen()
+		err := kademlia.Network.Listen(kademlia.RoutingTable.me)
 		if err != nil {
 			log.Printf("Error in network listener: %v", err)
 		}

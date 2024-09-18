@@ -7,8 +7,8 @@ import (
 
 // Network is a node in the network
 type Network struct {
-	IP        string
-	Port      int
+	// IP        string
+	// Port      int
 	Conn      *net.UDPConn
 	MessageCh chan Message // Channel for UDP messages
 }
@@ -17,18 +17,20 @@ type Network struct {
 type Message struct {
 	Content string
 	Address string
+	ID      string
 }
 
 // Listen listens on a UDP address and stores incoming messages in the channel.
-func (network *Network) Listen() error {
+func (network *Network) Listen(Node Contact) error {
 	// Create a UDPAddr based on the Network's IP and Port
-	addr := net.UDPAddr{
-		IP:   net.ParseIP(network.IP),
-		Port: network.Port,
-	}
+	// addr := net.UDPAddr{
+	// 	IP:   net.ParseIP(network.IP),
+	// 	Port: network.Port,
+	// }
+	udpAddr, err := net.ResolveUDPAddr("udp", Node.Address) //addr)
 
 	// Start listening on the provided address
-	conn, err := net.ListenUDP("udp", &addr)
+	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Printf("Error starting UDP listener: %v\n", err)
 		return err
@@ -53,7 +55,6 @@ func (network *Network) Listen() error {
 		network.MessageCh <- Message{Content: message, Address: contactAddress}
 	}
 
-	return nil
 }
 
 // sendMessage is a helper method to send messages to a contact using the existing UDP connection.
