@@ -7,8 +7,6 @@ import (
 
 // Network is a node in the network
 type Network struct {
-	// IP        string
-	// Port      int
 	Conn      *net.UDPConn
 	MessageCh chan Message // Channel for UDP messages
 }
@@ -23,11 +21,12 @@ type Message struct {
 // Listen listens on a UDP address and stores incoming messages in the channel.
 func (network *Network) Listen(Node Contact) error {
 	// Create a UDPAddr based on the Network's IP and Port
+
 	// addr := net.UDPAddr{
 	// 	IP:   net.ParseIP(network.IP),
 	// 	Port: network.Port,
 	// }
-	udpAddr, err := net.ResolveUDPAddr("udp", Node.Address) //addr)
+	udpAddr, err := net.ResolveUDPAddr("udp", Node.Address)
 
 	// Start listening on the provided address
 	conn, err := net.ListenUDP("udp", udpAddr)

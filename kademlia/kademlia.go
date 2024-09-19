@@ -64,3 +64,11 @@ func (kademlia *Kademlia) handlePong(contact *Contact) {
 func (kademlia *Kademlia) LookupContact(targetContact *Contact, kademliaID string) {
 	//kademlia.Network.SendFindContactMessage(targetContact, kademliaID)
 }
+
+func (kademlia *Kademlia) LookupData(hash string) {
+	// TODO
+}
+
+func (kademlia *Kademlia) Store(data []byte) {
+	// TODO
+}
