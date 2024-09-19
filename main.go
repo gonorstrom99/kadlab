@@ -27,13 +27,9 @@ func main() {
 
 	// Create Networks for the two nodes with message channels
 	network1 := &kademlia.Network{ // Use pointers
-		// IP:        "127.0.0.1",
-		// Port:      8000,
 		MessageCh: messageCh1,
 	}
 	network2 := &kademlia.Network{ // Use pointers
-		// IP:        "127.0.0.1",
-		// Port:      8001,
 		MessageCh: messageCh2,
 	}
 
