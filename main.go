@@ -45,8 +45,10 @@ func main() {
 	time.Sleep(1 * time.Second)
 
 	// Send a ping message from the second node to the first node
-	fmt.Printf("Sending ping from second node to first node: %v\n", contact)
-	secondKademliaNode.Network.SendPingMessage(&contact)
+	//fmt.Printf("Sending ping from second node to first node: %v\n", contact)
+	//secondKademliaNode.Network.SendPingMessage(&contact)
+
+	messageCh2 <- "lookUpContact"
 
 	// Give some time for the ping-pong interaction to complete
 	time.Sleep(4 * time.Second)
