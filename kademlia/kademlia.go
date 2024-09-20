@@ -39,6 +39,8 @@ func (kademlia *Kademlia) processMessages() {
 		// Handle different message types
 		switch msg.Content {
 		case "ping":
+			log.Printf("Received ping from %s", msg.Address)
+
 			kademlia.Network.SendPongMessage(contact)
 
 		case "pong":
@@ -66,6 +68,31 @@ func (kademlia *Kademlia) processMessages() {
 			log.Printf("Received unknown message type '%s' from %s", msg.Content, msg.Address)
 		}
 	}
+}
+
+func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
+	// checks if the contact is already in it's respective bucket.
+	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
+		return true
+	}
+
+	// if bucket is full - ping oldest contact to check if alive
+	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+	bucket := kademlia.RoutingTable.buckets[bucketIndex]
+	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
+		//ping amandas function
+		//if oldest contact alive {
+		//bucket.list.MoveToFront(bucket.list.Back())
+		//return false
+		//}
+		//If not alive{
+		//delete the dead contact
+		//bucket.list.Remove(bucket.list.Back())
+		//return true
+		//}
+	}
+
+	return false
 }
 
 // handlePing processes a "ping" message
