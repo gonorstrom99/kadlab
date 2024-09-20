@@ -1,6 +1,13 @@
 package kademlia
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"time"
+)
+
+const pongTimer = 5 //sekunder
+var pongList []string
 
 // Kademlia node
 type Kademlia struct {
@@ -29,7 +36,6 @@ func (kademlia *Kademlia) Start() {
 }
 
 // processMessages listens to the Network's channel and handles messages
-// processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
 	for msg := range kademlia.Network.MessageCh {
 		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Content, msg.Address, msg.ID)
@@ -42,6 +48,7 @@ func (kademlia *Kademlia) processMessages() {
 			kademlia.Network.SendPongMessage(contact)
 
 		case "pong":
+			kademlia.handlePongMessage(contact)
 			log.Printf("Received pong from %s", msg.Address)
 
 		case "lookUpContact":
@@ -110,4 +117,54 @@ func (kademlia *Kademlia) handleReturnFindValue(contact *Contact) {
 func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact) {
 	// TODO: Implement the logic for handling a "returnStoreValue" message
 	log.Printf("Handling returnStoreValue from %s", contact.Address)
+}
+
+var chPong chan string
+
+// CheckContactStatus pings a contact and returns true if its alive and false if not
+func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
+	kademlia.Network.SendPingMessage(contact)
+	pongList = append(pongList, contact.ID.String())
+	chPong = make(chan string)
+	timeOut := time.After(pongTimer * time.Second)
+	waitTime := time.Second
+	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
+
+	for {
+		select {
+		case ID := <-chPong:
+			if ID == contact.ID.String() {
+				pong = true
+				fmt.Println("The correct contact answered")
+				removeFromList(pongList, findListIndex(pongList, contact.ID.String()))
+				return pong
+			} else {
+				fmt.Println("Pong recieved from incorrect contact")
+			}
+		case <-timeOut:
+			fmt.Println("Waited five seconds, contact presumed dead")
+			return pong
+		default:
+			fmt.Println("still waiting for pong")
+		}
+		time.Sleep(waitTime)
+	}
+}
+
+func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
+	chPong <- contact.ID.String()
+}
+
+func removeFromList(s []string, i int) []string {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func findListIndex(s []string, ID string) int {
+	for i, IDs := range s {
+		if IDs == ID {
+			return i
+		}
+	}
+	return -1
 }
