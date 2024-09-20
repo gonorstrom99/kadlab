@@ -130,6 +130,7 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	waitTime := time.Second
 	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
 
+	//det var ngt mer jag skulle göra med pongList men har hjärnsläpp atm och kommer förhoppningsvis på det strax
 	for {
 		select {
 		case ID := <-chPong:
@@ -156,6 +157,10 @@ func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
 }
 
 func removeFromList(s []string, i int) []string {
+	if i == -1 {
+		fmt.Println("index out of range")
+		return s
+	}
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
 }
