@@ -35,38 +35,51 @@ func (kademlia *Kademlia) Start() {
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
 	for msg := range kademlia.Network.MessageCh {
-		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Content, msg.Address, msg.ID)
+		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Command, msg.SenderAddress, msg.SenderID)
 
-		contact := &Contact{ID: NewKademliaID(msg.ID), Address: msg.Address}
+		// Create a contact using the sender's ID and address
+		contact := &Contact{
+			ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
+			Address: msg.SenderAddress,           // The sender's IP and port
+		}
 
-		// Handle different message types
-		switch msg.Content {
+		// Handle different message types based on the "Command" field
+		switch msg.Command {
 		case "ping":
+			// Respond with "pong" to a ping message
 			kademlia.Network.SendPongMessage(contact)
 
 		case "pong":
-			log.Printf("Received pong from %s", msg.Address)
+			// Log that a pong message was received
+			log.Printf("Received pong from %s", msg.SenderAddress)
 
 		case "lookUpContact":
-			kademlia.handleLookUpContact(contact)
+			// Call the handleLookUpContact function, passing the contact
+			kademlia.handleLookUpContact(contact, msg.CommandInfo)
 
 		case "returnLookUpContact":
-			kademlia.handleReturnLookUpContact(contact, msg.Content)
+			// Handle the return lookup contact, passing commandInfo for processing
+			kademlia.handleReturnLookUpContact(contact, msg.CommandInfo)
 
 		case "findValue":
-			kademlia.handleFindValue(contact, msg.Content)
+			// Handle the findValue command, using commandInfo as additional data
+			kademlia.handleFindValue(contact, msg.CommandInfo)
 
 		case "returnFindValue":
-			kademlia.handleReturnFindValue(contact, msg.Content)
+			// Handle the return of a found value, using commandInfo as additional data
+			kademlia.handleReturnFindValue(contact, msg.CommandInfo)
 
 		case "storeValue":
-			kademlia.handleStoreValue(contact, msg.Content)
+			// Handle storing a value, with commandInfo containing the value to be stored
+			kademlia.handleStoreValue(contact, msg.CommandInfo)
 
 		case "returnStoreValue":
-			kademlia.handleReturnStoreValue(contact, msg.Content)
+			// Handle the return of a stored value
+			kademlia.handleReturnStoreValue(contact, msg.CommandInfo)
 
 		default:
-			log.Printf("Received unknown message type '%s' from %s", msg.Content, msg.Address)
+			// Log unknown command types
+			log.Printf("Received unknown message type '%s' from %s", msg.Command, msg.SenderAddress)
 		}
 	}
 }
@@ -79,15 +92,11 @@ func (kademlia *Kademlia) handlePing(contact *Contact) {
 	kademlia.Network.SendPongMessage(contact)
 }
 
-// handleLookUpContact processes a "lookUpContact" message
-func (kademlia *Kademlia) handleLookUpContact(contact *Contact) {
-	log.Printf("Handling lookUpContact from %s", contact.Address)
-
-	// Extract the target ID from the contact or message (assuming contact.ID here for simplicity)
-	targetID := contact.ID
+func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string) {
+	log.Printf("Handling lookUpContact from %s with target ID: %s", contact.Address, targetID)
 
 	// Find the 3 closest contacts to the target ID in the routing table
-	closestContacts := kademlia.RoutingTable.FindClosestContacts(targetID, 3) // Find 3 closest contacts
+	closestContacts := kademlia.RoutingTable.FindClosestContacts(NewKademliaID(targetID), 3)
 
 	// Prepare the response message by concatenating the three closest contacts
 	var responseMessage string
@@ -104,20 +113,19 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact) {
 		}
 	}
 
-	// Send the response back to the original contact with the message format "returnLookUpContact:<contacts>"
-	finalMessage := "returnLookUpContact:" + responseMessage
-	kademlia.Network.sendMessage(contact, finalMessage)
+	// Send the response message back to the requesting contact
+	// The command for the response is 'returnLookUpContact'
+	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s", responseMessage))
 
-	// Log the response message
-	log.Printf("Sent 'returnLookUpContact' to %s with contacts: %s", contact.Address, responseMessage)
+	log.Printf("Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
 }
 
 // handleReturnLookUpContact processes a "returnLookUpContact" message
-func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, message string) {
+func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInfo string) {
 	log.Printf("Handling returnLookUpContact from %s", contact.Address)
 
 	// Split the contact list by commas to get individual contact strings
-	contactStrings := strings.Split(message, ",")
+	contactStrings := strings.Split(commandInfo, ",")
 
 	// Iterate over the contact strings to parse and add them to the routing table
 	for _, contactStr := range contactStrings {
@@ -128,7 +136,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, message st
 			continue
 		}
 
-		// Create a new contact
+		// Create a new contact using the ID and the address
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
 
 		// Add the contact to the routing table
@@ -136,7 +144,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, message st
 	}
 
 	// Optionally, log that the contacts have been added to the routing table
-	log.Printf("Added contacts to the routing table from returnLookUpContact message: %s", message)
+	log.Printf("Added contacts to the routing table from returnLookUpContact message: %s", commandInfo)
 }
 
 // handleFindValue processes a "findValue" message

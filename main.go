@@ -44,13 +44,19 @@ func main() {
 	// Give some time for the nodes to start listening and processing messages
 	time.Sleep(1 * time.Second)
 
-	// Send a ping message from the second node to the first node
-	//fmt.Printf("Sending ping from second node to first node: %v\n", contact)
-	//secondKademliaNode.Network.SendPingMessage(&contact)
+	// Step 1: Send a ping message from the second node to the first node
+	fmt.Printf("Sending ping from second node to first node: %v\n", contact)
+	secondKademliaNode.Network.SendPingMessage(&contact)
 
-	messageCh2 <- "lookUpContact"
+	// Step 2: Wait and give time for the ping-pong interaction to complete
+	time.Sleep(2 * time.Second)
 
-	// Give some time for the ping-pong interaction to complete
+	// Step 3: Send a lookUpContact message from the second node to the first node
+	fmt.Println("Sending lookUpContact from second node to first node...")
+	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", secondContact.ID.String(), secondContact.ID.String())
+	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
+
+	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 	time.Sleep(4 * time.Second)
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
