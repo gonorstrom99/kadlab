@@ -2,11 +2,12 @@ package kademlia
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 )
 
 // the static number of bytes in a KademliaID
-const IDLength = 20
+const IDLength = 10
 
 // type definition of a KademliaID
 type KademliaID [IDLength]byte
@@ -14,6 +15,8 @@ type KademliaID [IDLength]byte
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
 	decoded, _ := hex.DecodeString(data)
+	fmt.Printf("newkademliaID runnin       ")
+	fmt.Printf("Decoded bytes: %v\n", decoded) // Print the raw byte slice
 
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
