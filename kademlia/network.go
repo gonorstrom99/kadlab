@@ -53,12 +53,23 @@ func (network *Network) Listen(contact Contact) error {
 		message := string(buffer[:n])
 		contactAddress := remoteAddr.String() // This is the sender's IP:Port
 
+		// Print diagnostics for the message received
+		log.Printf("Message received: %s from %s", message, contactAddress)
+
 		// Split the message by ":" to extract command, senderID, and command info
-		parts := strings.SplitN(message, ":", 3) // Expect 3 parts now: <command>, <sendersID>, <commandinfo>
-		if len(parts) != 3 {
-			log.Printf("Invalid message format received from %s: %s", contactAddress, message)
-			continue
-		}
+		parts := strings.SplitN(message, ":", 3) // Expect 3 parts now: <command>, <senderID>, <commandInfo>
+
+		// Log the split parts for diagnosis
+		// log.Printf("Message split into %d parts", len(parts))
+		// for i, part := range parts {
+		// 	log.Printf("Part[%d]: %s", i, part)
+		// }
+
+		// Validate the split result
+		// if len(parts) != 3 {
+		// 	log.Printf("Invalid message format received from %s: %s", contactAddress, message)
+		// 	continue
+		// }
 
 		// Extract the message parts
 		command := parts[0]
@@ -97,11 +108,11 @@ func (network *Network) SendMessage(contact *Contact, message string) {
 }
 
 // SendPingMessage sends a "ping" message to the contact.
-func (network *Network) SendPingMessage(contact *Contact) {
-	network.SendMessage(contact, "ping")
+func (network *Network) SendPingMessage(contact *Contact, message string) {
+	network.SendMessage(contact, message)
 }
 
 // SendPongMessage sends a "pong" message to the contact.
-func (network *Network) SendPongMessage(contact *Contact) {
-	network.SendMessage(contact, "pong")
+func (network *Network) SendPongMessage(contact *Contact, message string) {
+	network.SendMessage(contact, message)
 }

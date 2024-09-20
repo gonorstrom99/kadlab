@@ -46,8 +46,9 @@ func (kademlia *Kademlia) processMessages() {
 		// Handle different message types based on the "Command" field
 		switch msg.Command {
 		case "ping":
+			id := kademlia.RoutingTable.me.ID.String()
 			// Respond with "pong" to a ping message
-			kademlia.Network.SendPongMessage(contact)
+			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong")
 
 		case "pong":
 			// Log that a pong message was received
@@ -86,10 +87,16 @@ func (kademlia *Kademlia) processMessages() {
 
 // handlePing processes a "ping" message
 func (kademlia *Kademlia) handlePing(contact *Contact) {
-	log.Printf("Received ping from %s", contact)
+	log.Printf("Received ping from %s", contact.Address)
 
-	// Send a pong message back to the contact
-	kademlia.Network.SendPongMessage(contact)
+	// Prepare the pong message with the appropriate format
+	// The format will be "pong:<senderID>:<senderAddress>"
+	pongMessage := fmt.Sprintf("pong:%s:%s:pong", contact.ID.String(), contact.Address)
+
+	// Send the pong message back to the contact
+	kademlia.Network.SendMessage(contact, pongMessage)
+
+	log.Printf("Sent pong to %s", contact.Address)
 }
 
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string) {
@@ -100,6 +107,7 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string)
 
 	// Prepare the response message by concatenating the three closest contacts
 	var responseMessage string
+	myID := kademlia.RoutingTable.me.ID.String()
 	for i, c := range closestContacts {
 
 		contactStr := fmt.Sprintf("%s:%s", c.ID.String(), c.Address)
@@ -115,7 +123,8 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string)
 
 	// Send the response message back to the requesting contact
 	// The command for the response is 'returnLookUpContact'
-	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s", responseMessage))
+
+	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s:%s", myID, responseMessage))
 
 	log.Printf("Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
 }
