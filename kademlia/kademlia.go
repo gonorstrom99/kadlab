@@ -1,6 +1,21 @@
 package kademlia
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"slices"
+	"time"
+)
+
+const pongTimer = 5 //sekunder
+var chPong chan string
+
+type ponged struct {
+	ID        string
+	hasPonged bool
+}
+
+var pongList []ponged
 
 // Kademlia node
 type Kademlia struct {
@@ -29,7 +44,6 @@ func (kademlia *Kademlia) Start() {
 }
 
 // processMessages listens to the Network's channel and handles messages
-// processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
 	for msg := range kademlia.Network.MessageCh {
 		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Content, msg.Address, msg.ID)
@@ -44,6 +58,7 @@ func (kademlia *Kademlia) processMessages() {
 			kademlia.Network.SendPongMessage(contact)
 
 		case "pong":
+			kademlia.handlePongMessage(contact)
 			log.Printf("Received pong from %s", msg.Address)
 
 		case "lookUpContact":
@@ -145,4 +160,76 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
+}
+
+// CheckContactStatus pings a contact and returns true if its alive and false if not
+func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
+	kademlia.Network.SendPingMessage(contact)
+	contactId := contact.ID.String()
+	hasPonged := ponged{
+		ID:        contactId,
+		hasPonged: false,
+	}
+
+	pongList = append(pongList, hasPonged)
+	chPong = make(chan string)
+	timeOut := time.After(pongTimer * time.Second)
+	waitTime := time.Second
+	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
+
+	//det var ngt mer jag skulle göra med pongList men har hjärnsläpp atm och kommer förhoppningsvis på det strax
+	//ponglist finns specifikt för att för att hantera ifall pongs kommer i "fel" ordning, om man vill kolla statusen på flera kontakter
+
+	for {
+		select {
+		case ID := <-chPong:
+			IDPonged := ponged{
+				ID:        ID,
+				hasPonged: false,
+			}
+			if ID == contactId {
+				pong = true
+				fmt.Println("The correct contact answered")
+				removeFromList(pongList, findListIndex(pongList, contactId))
+				return pong
+			} else {
+				fmt.Println("Pong recieved from incorrect contact")
+				if slices.Contains(pongList, IDPonged) {
+					IDPonged.hasPonged = true
+				}
+			}
+		case <-timeOut:
+			fmt.Println("Waited five seconds, contact presumed dead")
+			return pong
+		default:
+			fmt.Println("still waiting for pong")
+		}
+		time.Sleep(waitTime)
+		if hasPonged.hasPonged == true {
+			pong = true
+			return pong
+		}
+	}
+}
+
+func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
+	chPong <- contact.ID.String()
+}
+
+func removeFromList(s []ponged, i int) []ponged {
+	if i == -1 {
+		fmt.Println("index out of range")
+		return s
+	}
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
+}
+
+func findListIndex(s []ponged, ID string) int {
+	for i, IDs := range s {
+		if IDs.ID == ID {
+			return i
+		}
+	}
+	return -1
 }

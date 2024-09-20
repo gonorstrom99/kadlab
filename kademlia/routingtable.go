@@ -19,10 +19,11 @@ func NewRoutingTable(me Contact) *RoutingTable {
 	return routingTable
 }
 
-// AddContact add a new contact to the correct Bucket
+// AddContact add a new contact to the correct Bucket (or move to front if it already exists)
 func (routingTable *RoutingTable) AddContact(contact Contact) {
 	//should the node be added? look at the bucket it should belong to
 	// and see if the next node is alive.
+	// add check if oldest contact is alive (should this be here or somewhere else?)
 	bucketIndex := routingTable.getBucketIndex(contact.ID)
 	bucket := routingTable.buckets[bucketIndex]
 	bucket.AddContact(contact)
