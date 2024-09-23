@@ -84,7 +84,20 @@ func (kademlia *Kademlia) processMessages() {
 		}
 	}
 }
+func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
+	//if it should be added it is done in the if, if the oldest node is
+	//alive it is moved to the front in the else, if the oldest node is
+	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
+	if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
+		kademlia.RoutingTable.AddContact(*contact)
+	} else {
+		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+		bucket := kademlia.RoutingTable.buckets[bucketIndex]
+		bucket.list.MoveToFront(bucket.list.Back())
 
+	}
+
+}
 func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
 	// checks if the contact is already in it's respective bucket.
 	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
@@ -97,17 +110,20 @@ func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) b
 	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
 		//ping amandas function
 		//if oldest contact alive {
-		//bucket.list.MoveToFront(bucket.list.Back())
-		//return false
-		//}
-		//If not alive{
+		oldContact := bucket.list.Back()
+		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) == true {
+			return false
+
+		}
+
+		//If not alive
 		//delete the dead contact
-		//bucket.list.Remove(bucket.list.Back())
-		//return true
-		//}
+		bucket.list.Remove(bucket.list.Back())
+		return true
+
 	}
 
-	return false
+	return true
 }
 
 // handlePing processes a "ping" message

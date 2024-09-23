@@ -51,7 +51,7 @@ func main() {
 	secondKademliaNode.Network.SendPingMessage(&contact)
 	// Give some time for the ping-pong interaction to complete
 
-	fmt.Printf("", deadContact)
+	fmt.Printf("hej", deadContact)
 
 	time.Sleep(4 * time.Second)
 
