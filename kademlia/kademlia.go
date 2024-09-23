@@ -91,7 +91,9 @@ func (kademlia *Kademlia) handlePing(contact *Contact) {
 
 	// Prepare the pong message with the appropriate format
 	// The format will be "pong:<senderID>:<senderAddress>"
-	pongMessage := fmt.Sprintf("pong:%s:%s:pong", contact.ID.String(), contact.Address)
+	id := kademlia.RoutingTable.me.ID.String()
+
+	pongMessage := fmt.Sprintf("pong:%s:%s:pong", id, contact.Address)
 
 	// Send the pong message back to the contact
 	kademlia.Network.SendMessage(contact, pongMessage)

@@ -10,7 +10,7 @@ func main() {
 	fmt.Println("Starting Kademlia nodes...")
 
 	// Create KademliaIDs for the nodes
-	id := kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000")
+	id := kademlia.NewRandomKademliaID()
 	secondID := kademlia.NewRandomKademliaID()
 
 	// Create Contacts for the two nodes
