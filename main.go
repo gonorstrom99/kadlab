@@ -16,6 +16,7 @@ func main() {
 	// Create Contacts for the two nodes
 	contact := kademlia.NewContact(id, "127.0.0.1:8000")
 	secondContact := kademlia.NewContact(secondID, "127.0.0.1:8001")
+	//deadContact := kademlia.NewContact(deadId, "127.0.0.1:8004")
 
 	// Create RoutingTables for the two nodes
 	routingTable := kademlia.NewRoutingTable(contact)

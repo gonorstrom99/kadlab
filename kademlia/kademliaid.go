@@ -6,7 +6,7 @@ import (
 )
 
 // the static number of bytes in a KademliaID
-const IDLength = 20
+const IDLength = 10
 
 // type definition of a KademliaID
 type KademliaID [IDLength]byte
@@ -14,6 +14,8 @@ type KademliaID [IDLength]byte
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
 	decoded, _ := hex.DecodeString(data)
+	//fmt.Printf("newkademliaID runnin       ")
+	//fmt.Printf("Decoded bytes: %v\n", decoded) // Print the raw byte slice
 
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
@@ -53,7 +55,7 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	return true
 }
 
-// CalcDistance returns a new instance of a KademliaID that is built 
+// CalcDistance returns a new instance of a KademliaID that is built
 // through a bitwise XOR operation betweeen kademliaID and target
 func (kademliaID KademliaID) CalcDistance(target *KademliaID) *KademliaID {
 	result := KademliaID{}
