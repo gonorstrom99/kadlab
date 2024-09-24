@@ -226,9 +226,9 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	id := kademlia.RoutingTable.me.ID.String()
 	messageString := fmt.Sprintf("ping:%s:ping", id)
 	kademlia.Network.SendPingMessage(contact, messageString)
-	contactId := contact.ID.String()
+	contactID := contact.ID.String()
 	hasPonged := ponged{
-		ID:        contactId,
+		ID:        contactID,
 		hasPonged: false,
 	}
 
@@ -245,10 +245,10 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 				ID:        ID,
 				hasPonged: false,
 			}
-			if ID == contactId {
+			if ID == contactID {
 				pong = true
 				fmt.Println("The correct contact answered")
-				removeFromList(pongList, findListIndex(pongList, contactId))
+				removeFromList(pongList, findListIndex(pongList, contactID))
 				return pong
 			} else {
 				fmt.Println("Pong recieved from incorrect contact")

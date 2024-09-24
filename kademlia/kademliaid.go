@@ -5,10 +5,10 @@ import (
 	"math/rand"
 )
 
-// the static number of bytes in a KademliaID
+// IDLength the static number of bytes in a KademliaID
 const IDLength = 10
 
-// type definition of a KademliaID
+// KademliaID type definition of a KademliaID
 type KademliaID [IDLength]byte
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input

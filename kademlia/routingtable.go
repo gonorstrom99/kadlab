@@ -74,13 +74,14 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 	return IDLength*8 - 1
 }
 
-// checks if a contact is in the routing table
+// IsContactInRoutingTable checks if a contact is in the routing table
 func (routingTable *RoutingTable) IsContactInRoutingTable(contact *Contact) bool {
 	index := routingTable.getBucketIndex(contact.ID)
 	bucket := routingTable.buckets[index]
 	return bucket.IsContactInBucket(contact)
 }
 
+// IsBucketFull checks if a bucket is full
 func (routingTable *RoutingTable) IsBucketFull(bucket *bucket) bool {
 	return bucket.Len() >= bucketSize
 }
