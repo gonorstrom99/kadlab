@@ -53,7 +53,7 @@ func (kademlia *Kademlia) processMessages() {
 		// Handle different message types
 		switch msg.Content {
 		case "ping":
-			kademlia.Network.SendPongMessage(contact)
+			kademlia.handlePing(contact)
 
 		case "pong":
 			kademlia.handlePongMessage(contact)
@@ -140,10 +140,7 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	chPong = make(chan string)
 	timeOut := time.After(pongTimer * time.Second)
 	waitTime := time.Second
-	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
-
-	//det var ngt mer jag skulle göra med pongList men har hjärnsläpp atm och kommer förhoppningsvis på det strax
-	//ponglist finns specifikt för att för att hantera ifall pongs kommer i "fel" ordning, om man vill kolla statusen på flera kontakter
+	var pong bool = false //gets set to true if handlePongMessage is called (somehow) //has changed but is still used and should work plsplspls
 
 	for {
 		select {
@@ -170,7 +167,7 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 			fmt.Println("still waiting for pong")
 		}
 		time.Sleep(waitTime)
-		if hasPonged.hasPonged == true {
+		if hasPonged.hasPonged {
 			pong = true
 			return pong
 		}
