@@ -12,6 +12,7 @@ func main() {
 	// Create KademliaIDs for the nodes
 	id := kademlia.NewRandomKademliaID()
 	secondID := kademlia.NewRandomKademliaID()
+	thirdID := kademlia.NewRandomKademliaID()
 
 	// Print the Kademlia IDs for the nodes
 	fmt.Printf("Kademlia ID of first node: %s\n", id.String())
@@ -24,6 +25,9 @@ func main() {
 	// Create RoutingTables for the two nodes
 	routingTable := kademlia.NewRoutingTable(contact)
 	secondRoutingTable := kademlia.NewRoutingTable(secondContact)
+
+	routingTable.AddContact(contact)
+	routingTable.AddContact(secondContact)
 
 	// Create message channels for each network
 	messageCh1 := make(chan kademlia.Message)
@@ -57,11 +61,11 @@ func main() {
 
 	// Step 3: Send a lookUpContact message from the second node to the first node
 	fmt.Println("Sending lookUpContact from second node to first node...")
-	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", secondContact.ID.String(), secondContact.ID.String())
+	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", thirdID.String(), secondContact.ID.String())
 	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
 
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
-	time.Sleep(4 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
 }
