@@ -32,6 +32,18 @@ func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
 	}
 }
 
+func CreateKademliaNode(address string) *Kademlia {
+	ID := NewRandomKademliaID()
+	contact := NewContact(ID, address)
+	routingTable := NewRoutingTable(contact)
+	messageCh := make(chan Message)
+	network := &Network{
+		MessageCh: messageCh,
+	}
+	kademliaNode := NewKademlia(network, routingTable)
+	return kademliaNode
+}
+
 // Start starts the Kademlia node, processing incoming messages from the network channel
 func (kademlia *Kademlia) Start() {
 	// Start processing messages from the network's channel
@@ -43,6 +55,9 @@ func (kademlia *Kademlia) Start() {
 	}()
 	go kademlia.processMessages()
 }
+
+/*Message structure :
+<command>:<senderID>:<commandInfo>*/
 
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
@@ -103,7 +118,7 @@ func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
 	//if it should be added it is done in the if, if the oldest node is
 	//alive it is moved to the front in the else, if the oldest node is
 	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
-	if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
+	if kademlia.shouldContactBeAddedToRoutingTable(contact) {
 		kademlia.RoutingTable.AddContact(*contact)
 	} else {
 		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
@@ -115,27 +130,24 @@ func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
 }
 func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
 	// checks if the contact is already in it's respective bucket.
-	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
+	if kademlia.RoutingTable.IsContactInRoutingTable(contact) {
 		return true
 	}
 
 	// if bucket is full - ping oldest contact to check if alive
 	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
 	bucket := kademlia.RoutingTable.buckets[bucketIndex]
-	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
+	if kademlia.RoutingTable.IsBucketFull(bucket) {
 		//ping amandas function
 		//if oldest contact alive {
 		oldContact := bucket.list.Back()
-		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) == true {
+		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) {
 			return false
-
 		}
-
 		//If not alive
 		//delete the dead contact
 		bucket.list.Remove(bucket.list.Back())
 		return true
-
 	}
 
 	return true

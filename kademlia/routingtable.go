@@ -79,8 +79,5 @@ func (routingTable *RoutingTable) IsContactInRoutingTable(contact *Contact) bool
 }
 
 func (routingTable *RoutingTable) IsBucketFull(bucket *bucket) bool {
-	if bucket.Len() >= bucketSize {
-		return true
-	}
-	return false
+	return bucket.Len() >= bucketSize
 }
