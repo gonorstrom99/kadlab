@@ -18,6 +18,9 @@ func NewRoutingTable(me Contact) *RoutingTable {
 	routingTable.me = me
 	return routingTable
 }
+func (routingTable *RoutingTable) GetMe() *Contact {
+	return &routingTable.me
+}
 
 // AddContact add a new contact to the correct Bucket (or move to front if it already exists)
 func (routingTable *RoutingTable) AddContact(contact Contact) {
@@ -79,8 +82,5 @@ func (routingTable *RoutingTable) IsContactInRoutingTable(contact *Contact) bool
 }
 
 func (routingTable *RoutingTable) IsBucketFull(bucket *bucket) bool {
-	if bucket.Len() >= bucketSize {
-		return true
-	}
-	return false
+	return bucket.Len() >= bucketSize
 }
