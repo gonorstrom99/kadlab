@@ -11,11 +11,12 @@ func main() {
 
 	// Create KademliaIDs for the nodes
 	id := kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000")
-	secondID := kademlia.NewRandomKademliaID()
+	secondID := kademlia.NewKademliaID("AAAAAAAA00000000000000000000000000000000")
 
 	// Create Contacts for the two nodes
 	contact := kademlia.NewContact(id, "127.0.0.1:8000")
 	secondContact := kademlia.NewContact(secondID, "127.0.0.1:8001")
+	//deadContact := kademlia.NewContact(deadId, "127.0.0.1:8004")
 
 	// Create RoutingTables for the two nodes
 	routingTable := kademlia.NewRoutingTable(contact)
@@ -44,11 +45,19 @@ func main() {
 	// Give some time for the nodes to start listening and processing messages
 	time.Sleep(1 * time.Second)
 
-	// Send a ping message from the second node to the first node
+	// Step 1: Send a ping message from the second node to the first node
 	fmt.Printf("Sending ping from second node to first node: %v\n", contact)
-	secondKademliaNode.Network.SendPingMessage(&contact)
+	secondKademliaNode.Network.SendPingMessage(&contact, "ping:"+contact.ID.String()+":ping")
 
-	// Give some time for the ping-pong interaction to complete
+	// Step 2: Wait and give time for the ping-pong interaction to complete
+	time.Sleep(1 * time.Second)
+
+	// Step 3: Send a lookUpContact message from the second node to the first node
+	fmt.Println("Sending lookUpContact from second node to first node...")
+	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", secondContact.ID.String(), secondContact.ID.String())
+	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
+
+	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 	time.Sleep(4 * time.Second)
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
