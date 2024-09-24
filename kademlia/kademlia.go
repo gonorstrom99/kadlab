@@ -168,9 +168,8 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 
 		// Create a new contact using the ID and the address
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
-		contactPointer := &newContact
-		// Add the contact to the routing table
-		kademlia.updateRoutingTable(contactPointer)
+
+		kademlia.updateRoutingTable(&newContact)
 	}
 
 	// Optionally, log that the contacts have been added to the routing table
@@ -180,7 +179,8 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 // handleFindValue processes a "findValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, message string) {
 	// TODO: Implement the logic for handling a "findValue" message
-	log.Printf("Handling findValue from %s", contact.Address)
+	log.Printf("Handling findValue from %s message: %s", contact.Address, message)
+
 }
 
 // handleReturnFindValue processes a "returnFindValue" message
