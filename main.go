@@ -6,35 +6,12 @@ import (
 	"time"
 )
 
+//trace print format: file: [insert file name] function: [insert function]
+
 func main() {
 	fmt.Println("Starting Kademlia nodes...")
 
-	// Create KademliaIDs for the nodes
-	/*id := kademlia.NewKademliaID("FFFFFFFF00000000000000000000000000000000")
-	secondID := kademlia.NewKademliaID("AAAAAAAA00000000000000000000000000000000")
-
-	// Create Contacts for the two nodes
-	contact := kademlia.NewContact(id, "127.0.0.1:8000")
-	secondContact := kademlia.NewContact(secondID, "127.0.0.1:8001")
-	//deadContact := kademlia.NewContact(deadId, "127.0.0.1:8004")
-
-	// Create RoutingTables for the two nodes
-	routingTable := kademlia.NewRoutingTable(contact)
-	secondRoutingTable := kademlia.NewRoutingTable(secondContact)
-
-	// Create message channels for each network
-	messageCh1 := make(chan kademlia.Message)
-	messageCh2 := make(chan kademlia.Message)
-
-	// Create Networks for the two nodes with message channels
-	network1 := &kademlia.Network{ // Use pointers
-		MessageCh: messageCh1,
-	}
-	network2 := &kademlia.Network{ // Use pointers
-		MessageCh: messageCh2,
-	}*/
-
-	// Create Kademlia instances for the two nodes with network and routing table references
+	// Create Kademlia instances for the two nodes, with IP and Port
 	firstKademliaNode := kademlia.CreateKademliaNode("127.0.0.1:8000")
 	secondKademliaNode := kademlia.CreateKademliaNode("127.0.0.1:8001")
 
@@ -47,7 +24,7 @@ func main() {
 
 	// Step 1: Send a ping message from the second node to the first node
 	fmt.Printf("Sending ping from second node to first node: %v\n", firstKademliaNode.RoutingTable.me)
-	secondKademliaNode.Network.SendPingMessage(firstKademliaNode.RoutingTable.me, "ping:"+firstKademliaNode.RoutingTable.me.ID.String()+":ping")
+	secondKademliaNode.Network.SendPingMessage(firstKademliaNode.RoutingTable.me, "ping:"+firstKademliaNode.RoutingTable.me.ID.String()+":ping") //det här känns inte som att det borde testas här tbh
 
 	// Step 2: Wait and give time for the ping-pong interaction to complete
 	time.Sleep(1 * time.Second)
@@ -62,15 +39,3 @@ func main() {
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
 }
-
-/*func createKademliaNode(address string) *kademlia.Kademlia {
-	ID := kademlia.NewRandomKademliaID()
-	contact := kademlia.NewContact(ID, address)
-	routingTable := kademlia.NewRoutingTable(contact)
-	messageCh := make(chan kademlia.Message)
-	network := &kademlia.Network{
-		MessageCh: messageCh,
-	}
-	kademliaNode := kademlia.NewKademlia(network, routingTable)
-	return kademliaNode
-}*/
