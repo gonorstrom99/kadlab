@@ -31,6 +31,17 @@ func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
 		RoutingTable: routingTable,
 	}
 }
+func CreateKademliaNode(address string) *Kademlia {
+	ID := NewRandomKademliaID()
+	contact := NewContact(ID, address)
+	routingTable := NewRoutingTable(contact)
+	messageCh := make(chan Message)
+	network := &Network{
+		MessageCh: messageCh,
+	}
+	kademliaNode := NewKademlia(network, routingTable)
+	return kademliaNode
+}
 
 // Start starts the Kademlia node, processing incoming messages from the network channel
 func (kademlia *Kademlia) Start() {
@@ -116,15 +127,11 @@ func (kademlia *Kademlia) handlePing(contact *Contact) {
 	log.Printf("Sent pong to %s", contact.Address)
 }
 
-func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
-	chPong <- contact.ID.String()
-}
-
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string) {
-	log.Printf("Handling lookUpContact from %s with target ID: %s", contact.Address, targetID)
+	log.Printf("(File: kademlia: Function: HandleLookupContact) Handling lookUpContact from %s with target ID: %s", contact.Address, targetID)
 
-	// Find the 3 closest contacts to the target ID in the routing table
-	closestContacts := kademlia.RoutingTable.FindClosestContacts(NewKademliaID(targetID), 3)
+	// Find the bucketSize closest contacts to the target ID in the routing table
+	closestContacts := kademlia.RoutingTable.FindClosestContacts(NewKademliaID(targetID), bucketSize)
 
 	// Prepare the response message by concatenating the three closest contacts
 	var responseMessage string
@@ -147,12 +154,12 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string)
 
 	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s:%s", myID, responseMessage))
 
-	log.Printf("Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
+	log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
 }
 
 // handleReturnLookUpContact processes a "returnLookUpContact" message
 func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInfo string) {
-	log.Printf("Handling returnLookUpContact from %s", contact.Address)
+	log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Handling returnLookUpContact from %s", contact.Address)
 
 	// Split the contact list by commas to get individual contact strings
 	contactStrings := strings.Split(commandInfo, ",")
@@ -161,44 +168,45 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 	for _, contactStr := range contactStrings {
 		// Split each contact string into ID and address using ":"
 		parts := strings.Split(contactStr, ":")
-		if len(parts) != 2 {
-			log.Printf("Invalid contact format: %s", contactStr)
+		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(parts):", len(parts))
+		if len(parts) != 3 {
+			log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Invalid contact format: %s", contactStr)
 			continue
 		}
 
 		// Create a new contact using the ID and the address
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
-
+		// Add the contact to the routing table
 		kademlia.updateRoutingTable(&newContact)
-		// Optionally, log that the contacts have been added to the routing table
-		log.Printf("Added contact to the routing table from returnLookUpContact message: %s", contactStr)
+		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) called updateRoutingTable for a contact in returnLookUpContact message: %s", commandInfo)
+
 	}
 
+	// Optionally, log that the contacts have been added to the routing table
 }
 
 // handleFindValue processes a "findValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, message string) {
 	// TODO: Implement the logic for handling a "findValue" message
-	log.Printf("Handling findValue from %s message: %s", contact.Address, message)
-
+	log.Printf("(File: kademlia: Function: HandleFindValue) Handling findValue from %s", contact.Address)
 }
 
 // handleReturnFindValue processes a "returnFindValue" message
 func (kademlia *Kademlia) handleReturnFindValue(contact *Contact, message string) {
 	// TODO: Implement the logic for handling a "returnFindValue" message
-	log.Printf("Handling returnFindValue from %s", contact.Address)
+	log.Printf("(File: kademlia: Function: HandleReturnFindValue) Handling returnFindValue from %s", contact.Address)
 }
 
 // handleStoreValue processes a "storeValue" message
 func (kademlia *Kademlia) handleStoreValue(contact *Contact, message string) {
 	// TODO: Implement the logic for handling a "storeValue" message
-	log.Printf("Handling storeValue from %s", contact.Address)
+	log.Printf("(File: kademlia: Function: HandleStoreValue) Handling storeValue from %s", contact.Address)
 }
 
 // handleReturnStoreValue processes a "returnStoreValue" message
 func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, message string) {
 	// TODO: Implement the logic for handling a "returnStoreValue" message
-	log.Printf("Handling returnStoreValue from %s", contact.Address)
+	log.Printf("(File: kademlia: Function: HandleReturnStoreValue) Handling returnStoreValue from %s", contact.Address)
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
@@ -262,6 +270,10 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	}
 }
 
+func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
+	chPong <- contact.ID.String()
+}
+
 func removeFromList(s []ponged, i int) []ponged {
 	if i == -1 {
 		fmt.Println("index out of range")
@@ -284,7 +296,9 @@ func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
 	//if it should be added it is done in the if, if the oldest node is
 	//alive it is moved to the front in the else, if the oldest node is
 	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
-	if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
+	if kademlia.RoutingTable.me == *contact {
+		return
+	} else if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
 		kademlia.RoutingTable.AddContact(*contact)
 	} else {
 		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
