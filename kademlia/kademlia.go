@@ -170,10 +170,10 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
 
 		kademlia.updateRoutingTable(&newContact)
+		// Optionally, log that the contacts have been added to the routing table
+		log.Printf("Added contact to the routing table from returnLookUpContact message: %s", contactStr)
 	}
 
-	// Optionally, log that the contacts have been added to the routing table
-	log.Printf("Added contacts to the routing table from returnLookUpContact message: %s", commandInfo)
 }
 
 // handleFindValue processes a "findValue" message
