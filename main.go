@@ -13,10 +13,13 @@ func main() {
 	id := kademlia.NewRandomKademliaID()
 	secondID := kademlia.NewRandomKademliaID()
 
+	// Print the Kademlia IDs for the nodes
+	fmt.Printf("Kademlia ID of first node: %s\n", id.String())
+	fmt.Printf("Kademlia ID of second node: %s\n", secondID.String())
+
 	// Create Contacts for the two nodes
 	contact := kademlia.NewContact(id, "127.0.0.1:8000")
 	secondContact := kademlia.NewContact(secondID, "127.0.0.1:8001")
-	//deadContact := kademlia.NewContact(deadId, "127.0.0.1:8004")
 
 	// Create RoutingTables for the two nodes
 	routingTable := kademlia.NewRoutingTable(contact)
@@ -27,10 +30,10 @@ func main() {
 	messageCh2 := make(chan kademlia.Message)
 
 	// Create Networks for the two nodes with message channels
-	network1 := &kademlia.Network{ // Use pointers
+	network1 := &kademlia.Network{
 		MessageCh: messageCh1,
 	}
-	network2 := &kademlia.Network{ // Use pointers
+	network2 := &kademlia.Network{
 		MessageCh: messageCh2,
 	}
 
@@ -47,7 +50,7 @@ func main() {
 
 	// Step 1: Send a ping message from the second node to the first node
 	fmt.Printf("Sending ping from second node to first node: %v\n", contact)
-	secondKademliaNode.Network.SendPingMessage(&contact, "ping:"+contact.ID.String()+":ping")
+	secondKademliaNode.Network.SendPingMessage(&contact, "ping:"+secondID.String()+":ping")
 
 	// Step 2: Wait and give time for the ping-pong interaction to complete
 	time.Sleep(1 * time.Second)

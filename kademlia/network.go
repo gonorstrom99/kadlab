@@ -54,7 +54,7 @@ func (network *Network) Listen(contact Contact) error {
 		contactAddress := remoteAddr.String() // This is the sender's IP:Port
 
 		// Print diagnostics for the message received
-		log.Printf("Message received: %s from %s", message, contactAddress)
+		//log.Printf("Message received: %s from %s", message, contactAddress)
 
 		// Split the message by ":" to extract command, senderID, and command info
 		parts := strings.SplitN(message, ":", 3) // Expect 3 parts now: <command>, <senderID>, <commandInfo>
@@ -77,7 +77,7 @@ func (network *Network) Listen(contact Contact) error {
 		commandInfo := parts[2]
 
 		// Log and send the message to the channel for processing
-		log.Printf("Network received message: %s from %s (ID: %s, commandInfo: %s)", command, contactAddress, senderID, commandInfo)
+		//log.Printf("Network received message: %s from %s (ID: %s, commandInfo: %s)", command, contactAddress, senderID, commandInfo)
 		network.MessageCh <- Message{
 			Command:       command,
 			CommandInfo:   commandInfo,
@@ -104,7 +104,7 @@ func (network *Network) SendMessage(contact *Contact, message string) {
 		return
 	}
 
-	log.Printf("Network sent message '%s' to %s", message, contact.Address)
+	//log.Printf("Network sent message '%s' to %s", message, contact.Address)
 }
 
 // SendPingMessage sends a "ping" message to the contact.

@@ -61,7 +61,7 @@ func (kademlia *Kademlia) processMessages() {
 
 			id := kademlia.RoutingTable.me.ID.String()
 			// Respond with "pong" to a ping message
-			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong") // TODO look into message structure
+			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong")
 
 		case "pong":
 			kademlia.handlePongMessage(contact)
