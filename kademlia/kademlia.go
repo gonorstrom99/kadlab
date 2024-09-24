@@ -61,7 +61,7 @@ func (kademlia *Kademlia) processMessages() {
 
 			id := kademlia.RoutingTable.me.ID.String()
 			// Respond with "pong" to a ping message
-			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong")
+			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong") // TODO look into message structure
 
 		case "pong":
 			kademlia.handlePongMessage(contact)
@@ -99,47 +99,6 @@ func (kademlia *Kademlia) processMessages() {
 		}
 	}
 }
-func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
-	//if it should be added it is done in the if, if the oldest node is
-	//alive it is moved to the front in the else, if the oldest node is
-	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
-	if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
-		kademlia.RoutingTable.AddContact(*contact)
-	} else {
-		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
-		bucket := kademlia.RoutingTable.buckets[bucketIndex]
-		bucket.list.MoveToFront(bucket.list.Back())
-
-	}
-
-}
-func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
-	// checks if the contact is already in it's respective bucket.
-	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
-		return true
-	}
-
-	// if bucket is full - ping oldest contact to check if alive
-	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
-	bucket := kademlia.RoutingTable.buckets[bucketIndex]
-	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
-		//ping amandas function
-		//if oldest contact alive {
-		oldContact := bucket.list.Back()
-		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) == true {
-			return false
-
-		}
-
-		//If not alive
-		//delete the dead contact
-		bucket.list.Remove(bucket.list.Back())
-		return true
-
-	}
-
-	return true
-}
 
 // handlePing processes a "ping" message
 func (kademlia *Kademlia) handlePing(contact *Contact) {
@@ -149,12 +108,16 @@ func (kademlia *Kademlia) handlePing(contact *Contact) {
 	// The format will be "pong:<senderID>:<senderAddress>"
 	id := kademlia.RoutingTable.me.ID.String()
 
-	pongMessage := fmt.Sprintf("pong:%s:%s:pong", id, contact.Address)
+	pongMessage := fmt.Sprintf("pong:%s:pong", id)
 
 	// Send the pong message back to the contact
 	kademlia.Network.SendMessage(contact, pongMessage)
 
 	log.Printf("Sent pong to %s", contact.Address)
+}
+
+func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
+	chPong <- contact.ID.String()
 }
 
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string) {
@@ -174,7 +137,7 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string)
 		responseMessage += contactStr
 
 		// Add a comma after each contact except the last one
-		if i < len(closestContacts)-1 {
+		if i < len(closestContacts)-1 { //TODO check for off by one error
 			responseMessage += ","
 		}
 	}
@@ -205,9 +168,9 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 
 		// Create a new contact using the ID and the address
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
-
+		contactPointer := &newContact
 		// Add the contact to the routing table
-		kademlia.RoutingTable.AddContact(newContact)
+		kademlia.updateRoutingTable(contactPointer)
 	}
 
 	// Optionally, log that the contacts have been added to the routing table
@@ -248,7 +211,10 @@ func (kademlia *Kademlia) Store(data []byte) {
 
 // CheckContactStatus pings a contact and returns true if its alive and false if not
 func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
-	kademlia.Network.SendPingMessage(contact, "ping")
+
+	id := kademlia.RoutingTable.me.ID.String()
+	messageString := fmt.Sprintf("ping:%s:ping", id)
+	kademlia.Network.SendPingMessage(contact, messageString)
 	contactId := contact.ID.String()
 	hasPonged := ponged{
 		ID:        contactId,
@@ -296,10 +262,6 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	}
 }
 
-func (kademlia *Kademlia) handlePongMessage(contact *Contact) {
-	chPong <- contact.ID.String()
-}
-
 func removeFromList(s []ponged, i int) []ponged {
 	if i == -1 {
 		fmt.Println("index out of range")
@@ -316,4 +278,46 @@ func findListIndex(s []ponged, ID string) int {
 		}
 	}
 	return -1
+}
+
+func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
+	//if it should be added it is done in the if, if the oldest node is
+	//alive it is moved to the front in the else, if the oldest node is
+	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
+	if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
+		kademlia.RoutingTable.AddContact(*contact)
+	} else {
+		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+		bucket := kademlia.RoutingTable.buckets[bucketIndex]
+		bucket.list.MoveToFront(bucket.list.Back())
+
+	}
+}
+
+func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
+	// checks if the contact is already in it's respective bucket.
+	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
+		return true
+	}
+
+	// if bucket is full - ping oldest contact to check if alive
+	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+	bucket := kademlia.RoutingTable.buckets[bucketIndex]
+	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
+		//ping amandas function
+		//if oldest contact alive {
+		oldContact := bucket.list.Back()
+		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) == true {
+			return false
+
+		}
+
+		//If not alive
+		//delete the dead contact
+		bucket.list.Remove(bucket.list.Back())
+		return true
+
+	}
+
+	return true
 }
