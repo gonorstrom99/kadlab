@@ -56,9 +56,13 @@ func main() {
 	fmt.Println("Sending lookUpContact from second node to first node...")
 	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", secondContact.ID.String(), secondContact.ID.String())
 	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
+	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
+	secondKademliaNode.Network.SendMessage(&contact, lookupMessage)
 
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
-	time.Sleep(4 * time.Second)
+	time.Sleep(2 * time.Second)
+	fmt.Println("Value of iscontactinroutiongtable:", secondKademliaNode.RoutingTable.IsContactInRoutingTable(&contact))
+	time.Sleep(2 * time.Second)
 
 	fmt.Println("Kademlia nodes are running. Check logs for network activity.")
 }

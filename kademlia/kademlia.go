@@ -158,8 +158,8 @@ func (kademlia *Kademlia) handlePing(contact *Contact) {
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string) {
 	log.Printf("Handling lookUpContact from %s with target ID: %s", contact.Address, targetID)
 
-	// Find the 3 closest contacts to the target ID in the routing table
-	closestContacts := kademlia.RoutingTable.FindClosestContacts(NewKademliaID(targetID), 3)
+	// Find the bucketSize closest contacts to the target ID in the routing table
+	closestContacts := kademlia.RoutingTable.FindClosestContacts(NewKademliaID(targetID), bucketSize)
 
 	// Prepare the response message by concatenating the three closest contacts
 	var responseMessage string
@@ -205,7 +205,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
 
 		// Add the contact to the routing table
-		kademlia.RoutingTable.AddContact(newContact)
+		kademlia.updateRoutingTable(&newContact)
 	}
 
 	// Optionally, log that the contacts have been added to the routing table
