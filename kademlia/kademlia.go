@@ -16,12 +16,17 @@ type ponged struct {
 	hasPonged bool
 }
 
+type job struct {
+	id string
+}
+
 var pongList []ponged
 
 // Kademlia node
 type Kademlia struct {
 	Network      *Network
 	RoutingTable *RoutingTable
+	Jobs         chan job
 }
 
 // NewKademlia creates and initializes a new Kademlia node
