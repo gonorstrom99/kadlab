@@ -3,6 +3,7 @@ package kademlia
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"slices"
 	"strings"
 	"time"
@@ -21,6 +22,13 @@ type job struct {
 }
 
 var pongList []ponged
+
+// TODO com.ID kommer ändra message strukturen
+// commandID will be a random int
+// use newCommandID to get a command ID, even though it's just a random int
+// för att kolla om ett ID finns i listan, använd slices.contains(listan, ID)
+// kan ha flera listor för olika commands om man vill (en för lookupcontact etc)
+var commandIDlist []int
 
 // Kademlia node
 type Kademlia struct {
@@ -59,6 +67,9 @@ func (kademlia *Kademlia) Start() {
 	}()
 	go kademlia.processMessages()
 }
+
+/*Message structure :
+<command>:<senderID>:<commandInfo>*/
 
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
@@ -183,6 +194,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
 		// Add the contact to the routing table
 		kademlia.updateRoutingTable(&newContact)
+		//TODO if com.id in commandlist run lookupcontact again
 		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) called updateRoutingTable for a contact in returnLookUpContact message: %s", commandInfo)
 
 	}
@@ -238,10 +250,7 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 	chPong = make(chan string)
 	timeOut := time.After(pongTimer * time.Second)
 	waitTime := time.Second
-	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
-
-	//det var ngt mer jag skulle göra med pongList men har hjärnsläpp atm och kommer förhoppningsvis på det strax
-	//ponglist finns specifikt för att för att hantera ifall pongs kommer i "fel" ordning, om man vill kolla statusen på flera kontakter
+	var pong bool = false //gets set to true if handlePongMessage is called (somehow) //has changed but is still used and should work plsplspls
 
 	for {
 		select {
@@ -268,7 +277,8 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
 			fmt.Println("still waiting for pong")
 		}
 		time.Sleep(waitTime)
-		if hasPonged.hasPonged == true {
+		if hasPonged.hasPonged {
+			//TODO should be removed from list
 			pong = true
 			return pong
 		}
@@ -339,4 +349,17 @@ func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) b
 	}
 
 	return true
+}
+
+func newCommandID() int {
+	return rand.Int()
+}
+
+func removeFromCommandIDList(s []int, i int) []int {
+	if i == -1 {
+		fmt.Println("index out of range")
+		return s
+	}
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
 }
