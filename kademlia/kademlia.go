@@ -165,6 +165,7 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, targetID string)
 	// The command for the response is 'returnLookUpContact'
 
 	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s:%s", myID, responseMessage))
+	kademlia.updateRoutingTable(contact)
 
 	log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
 }

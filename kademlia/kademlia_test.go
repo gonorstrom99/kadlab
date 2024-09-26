@@ -90,5 +90,8 @@ func TestNetworkJoining(t *testing.T) {
 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode4.RoutingTable.GetMe())) {
 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
 	}
+	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe())) {
+		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+	}
 
 }
