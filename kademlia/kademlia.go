@@ -349,16 +349,17 @@ func newCommandID() int {
 	return rand.Int()
 }
 
-func removeFromCommandIDList(s []int, ID int) []int {
-	for i, IDs := range s {
+func removeFromCommandIDList(ID int) []int {
+	for i, IDs := range commandIDlist {
 		if IDs == ID {
 			if i == -1 {
 				fmt.Println("index out of range")
-				return s
+				return commandIDlist
 			}
-			s[i] = s[len(s)-1]
-			return s[:len(s)-1]
+			// Replace the current element with the last one and then truncate the slice
+			commandIDlist[i] = commandIDlist[len(commandIDlist)-1]
+			return commandIDlist[:len(commandIDlist)-1]
 		}
 	}
-	return s
+	return commandIDlist
 }
