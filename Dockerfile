@@ -11,3 +11,16 @@ FROM alpine:latest
 # "kadlab", which you do by using the following command:
 #
 # $ docker build . -t kadlab
+WORKDIR /app
+
+#fil måste vara kompilerad innan man kör
+# görs med
+# ./compile.sh
+# om error, kör först
+# sudo chmod +x ./compile.sh
+COPY d7024e ./d7024e
+
+# sudo docker logs --follow [namn på nod]
+# skriver vi saker i nodens log bör detta isf skrivas ut i terminalen
+
+ENTRYPOINT ./d7024e

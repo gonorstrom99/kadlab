@@ -64,7 +64,7 @@ func (kademlia *Kademlia) Start() {
 }
 
 /*Message structure :
-<command>:<senderID>:<commandInfo>*/
+<command>:<senderID>:<commandID><commandInfo>*/
 
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {

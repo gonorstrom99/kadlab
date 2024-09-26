@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+
+	// skall endast skapa en bootstrap-nod
 	fmt.Println("(file: main) Starting Kademlia nodes...")
 	KademliaNode1 := kademlia.CreateKademliaNode("127.0.0.1:8000")
 	KademliaNode2 := kademlia.CreateKademliaNode("127.0.0.1:8001")
