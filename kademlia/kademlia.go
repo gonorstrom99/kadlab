@@ -37,6 +37,7 @@ func CreateKademliaNode(address string) *Kademlia {
 	routingTable := NewRoutingTable(contact)
 	messageCh := make(chan Message)
 	network := &Network{
+		ID:        *ID,
 		MessageCh: messageCh,
 	}
 	kademliaNode := NewKademlia(network, routingTable)
@@ -178,10 +179,11 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, commandInf
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
 		// Add the contact to the routing table
 		kademlia.updateRoutingTable(&newContact)
+		//if command exists
+		//lookupcontact(newcontact, targetContact)
 		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) called updateRoutingTable for a contact in returnLookUpContact message: %s", commandInfo)
 
 	}
-
 	// Optionally, log that the contacts have been added to the routing table
 }
 
