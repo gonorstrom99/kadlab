@@ -81,9 +81,9 @@ func (kademlia *Kademlia) processMessages() {
 		switch msg.Command {
 		case "ping":
 
-			id := kademlia.RoutingTable.me.ID.String()
+			// id := kademlia.RoutingTable.me.ID.String()
 			// Respond with "pong" to a ping message
-			kademlia.Network.SendPongMessage(contact, "pong:"+id+":pong")
+			kademlia.handlePing(contact)
 
 		case "pong":
 			kademlia.handlePongMessage(contact)
@@ -350,11 +350,16 @@ func newCommandID() int {
 	return rand.Int()
 }
 
-func removeFromCommandIDList(s []int, i int) []int {
-	if i == -1 {
-		fmt.Println("index out of range")
-		return s
+func removeFromCommandIDList(s []int, ID int) []int {
+	for i, IDs := range s {
+		if IDs == ID {
+			if i == -1 {
+				fmt.Println("index out of range")
+				return s
+			}
+			s[i] = s[len(s)-1]
+			return s[:len(s)-1]
+		}
 	}
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+	return s
 }
