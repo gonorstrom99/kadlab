@@ -17,18 +17,6 @@ type ponged struct {
 	hasPonged bool
 }
 
-// Task represents an ongoing task for the Kademlia node.
-type Task struct {
-	CommandType string // The type of task (e.g., "lookUpContact", "findValue")
-	CommandID   int
-	TargetID    *KademliaID // The ID or we're looking for (if applicable)
-	StartTime   time.Time   // When the job was started (for timeouts)
-	Contact     *Contact    // The contact that initiated the job
-	// Add other relevant fields, like expected results, etc.
-}
-
-// TODO com.ID kommer ändra message strukturen
-// commandID will be a random int
 // use newCommandID to get a command ID, even though it's just a random int
 // för att kolla om ett ID finns i listan, använd slices.contains(listan, ID)
 // kan ha flera listor för olika commands om man vill (en för lookupcontact etc)
@@ -40,6 +28,7 @@ var pongList []ponged
 type Kademlia struct {
 	Network      *Network
 	RoutingTable *RoutingTable
+	Tasks        []Task
 }
 
 // NewKademlia creates and initializes a new Kademlia node
