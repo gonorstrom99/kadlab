@@ -57,6 +57,10 @@ func TestIterativeLookupAndAdding(t *testing.T) {
 		t.Fatalf("(File: kademlia_test, Test: TestIterativeLookupAndAdding) the iterative part of lookup does not work")
 	}
 }
+
+// //TODO Dela upp networkjoining testet till två, ett som kollar att om
+// nod 1 får en viss input så skickar den ut sina 3 noder, och ett som
+// kollar om nod 5 får ett visst meddelande, att den lägger till noderna.
 func TestNetworkJoining(t *testing.T) {
 
 	KademliaNode1 := CreateKademliaNode("127.0.0.1:8000")

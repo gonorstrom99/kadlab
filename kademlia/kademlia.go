@@ -69,6 +69,7 @@ func (kademlia *Kademlia) Start() {
 
 // processMessages listens to the Network's channel and handles messages
 func (kademlia *Kademlia) processMessages() {
+
 	for msg := range kademlia.Network.MessageCh {
 		log.Printf("Kademlia processing message: '%s' from %s with ID: %s", msg.Command, msg.SenderAddress, msg.SenderID)
 

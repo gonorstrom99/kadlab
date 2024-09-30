@@ -45,6 +45,7 @@ func main() {
 	time.Sleep(2 * time.Second)
 	fmt.Println("(file: main) Value of iscontactinroutingtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe()))
 
-	time.Sleep(2 * time.Second)
+	for {
 
+	}
 }
