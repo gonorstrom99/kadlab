@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -137,7 +138,7 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 }
 
 func (kademlia *Kademlia) handlePongMessage(contact *Contact, msg Message) {
-	chPong <- contact.ID.String()
+
 }
 
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
@@ -174,6 +175,23 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
 func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Message) {
 	log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Handling returnLookUpContact from %s", contact.Address)
 
+	// Parse the CommandID to find the task
+	commandID, err := strconv.Atoi(msg.CommandID)
+	if err != nil {
+		log.Printf("Invalid CommandID in message: %s", msg.CommandID)
+		return
+	}
+
+	// Find the task by CommandID
+	task, err := kademlia.FindTaskByCommandID(commandID)
+	if err != nil {
+		log.Printf("Task with CommandID %d not found", commandID)
+		return
+	}
+
+	// Remove this contact from the task's waitingForReturns list
+	kademlia.RemoveContactFromTask(commandID, *contact)
+
 	// Split the contact list by commas to get individual contact strings
 	contactStrings := strings.Split(msg.CommandInfo, ",")
 
@@ -181,21 +199,57 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Messag
 	for _, contactStr := range contactStrings {
 		// Split each contact string into ID and address using ":"
 		parts := strings.Split(contactStr, ":")
-		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(parts):", len(parts))
-		if len(parts) != 3 {
+		if len(parts) != 2 {
 			log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Invalid contact format: %s", contactStr)
 			continue
 		}
 
 		// Create a new contact using the ID and the address
 		newContact := NewContact(NewKademliaID(parts[0]), parts[1]) // parts[0] is the ID, parts[1] is the address
-		// Add the contact to the routing table
-		kademlia.updateRoutingTable(&newContact)
-		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) called updateRoutingTable for a contact in returnLookUpContact message: %s", commandInfo)
 
+		// Add the new contact to the routing table
+		kademlia.updateRoutingTable(&newContact)
+
+		// Add the contact to the task's closest contacts if it's not already there
+		if !kademlia.isContactInList(task.ClosestContacts, newContact) {
+			task.ClosestContacts = append(task.ClosestContacts, newContact)
+		}
 	}
 
-	// Optionally, log that the contacts have been added to the routing table
+	// Now, find the closest uncontacted contact from the task's closest contacts
+	for _, closestContact := range task.ClosestContacts {
+		if !kademlia.isContactInList(task.ContactedNodes, closestContact) {
+			// Send a lookUpContact message to this closest uncontacted contact
+			lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", kademlia.RoutingTable.me.ID.String(), task.CommandID, task.TargetID.String())
+			kademlia.Network.SendMessage(&closestContact, lookupMessage)
+
+			// Mark this contact as contacted
+			task.ContactedNodes = append(task.ContactedNodes, closestContact)
+			task.WaitingForReturns = append(task.WaitingForReturns, WaitingContact{
+				SentTime: time.Now(),
+				Contact:  closestContact,
+			})
+
+			log.Printf("Sent lookUpContact to %s", closestContact.Address)
+			return
+		}
+	}
+
+	// If no uncontacted nodes remain, we can consider the task complete or handle accordingly
+	log.Printf("All contacts have been contacted for task %d", task.CommandID)
+
+	// Optionally, mark the task as complete if all responses have been received
+	kademlia.MarkTaskAsCompleted(task.CommandID)
+}
+
+// isContactInList checks if a contact is already in a list of contacts
+func (kademlia *Kademlia) isContactInList(contacts []Contact, contact Contact) bool {
+	for _, c := range contacts {
+		if c.ID.Equals(contact.ID) {
+			return true
+		}
+	}
+	return false
 }
 
 // handleFindValue processes a "findValue" message
