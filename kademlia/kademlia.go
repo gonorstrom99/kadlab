@@ -28,7 +28,7 @@ var pongList []ponged
 type Kademlia struct {
 	Network      *Network
 	RoutingTable *RoutingTable
-	Tasks        []Task
+	// Tasks        []Task
 }
 
 // NewKademlia creates and initializes a new Kademlia node
@@ -63,6 +63,16 @@ func (kademlia *Kademlia) Start() {
 		}
 	}()
 	go kademlia.processMessages()
+}
+
+func (kademlia *Kademlia) StartLookUpContact(recipient Contact, lookupTarget Contact) {
+
+	lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", kademlia.Network.ID.String(), NewCommandID(), lookupTarget.ID.String())
+	//  lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", KademliaNode1.Network.ID.String(), kademlia.NewCommandID(), KademliaNode1.Network.ID.String())
+
+	kademlia.Network.SendMessage(&recipient, lookupMessage)
+	//  KademliaNode1.Network.SendMessage(KademliaNode2.RoutingTable.GetMe(), lookupMessage)
+
 }
 
 // processMessages listens to the Network's channel and handles messages
@@ -167,7 +177,7 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
 	// Send the response message back to the requesting contact
 	// The command for the response is 'returnLookUpContact'
 
-	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s:%s", myID, responseMessage))
+	kademlia.Network.SendMessage(contact, fmt.Sprintf("returnLookUpContact:%s:%s:%s", myID, msg.CommandID, responseMessage))
 	kademlia.updateRoutingTable(contact)
 
 	log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
@@ -182,6 +192,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Messag
 
 	// Iterate over the contact strings to parse and add them to the routing table
 	for _, contactStr := range contactStrings {
+
 		// Split each contact string into ID and address using ":"
 		parts := strings.Split(contactStr, ":")
 		//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(parts):", len(parts))

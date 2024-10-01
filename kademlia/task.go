@@ -7,13 +7,12 @@ import (
 	"time"
 )
 
-// Task represents an ongoing task for the Kademlia node.
+// // Task represents an ongoing task for the Kademlia node.
 type Task struct {
 	CommandType       string      // The type of task (e.g., "lookUpContact", "findValue")
 	CommandID         int         //
 	TargetID          *KademliaID // The ID or we're looking for (if applicable)
 	StartTime         time.Time   // When the job was started (for timeouts)
-	StartContact      *Contact    // The contact that initiated the job
 	ClosestContacts   []Contact   // for storing nodes that are closest
 	ContactedNodes    []Contact
 	waitingForReturns []Contact
