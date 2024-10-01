@@ -4,26 +4,12 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
 )
 
 const pongTimer = 5 //sekunder
-var chPong chan string
-
-type ponged struct {
-	ID        string
-	hasPonged bool
-}
-
-// use newCommandID to get a command ID, even though it's just a random int
-// för att kolla om ett ID finns i listan, använd slices.contains(listan, ID)
-// kan ha flera listor för olika commands om man vill (en för lookupcontact etc)
-var commandIDlist []int
-
-var pongList []ponged
 
 // Kademlia node
 type Kademlia struct {
@@ -33,10 +19,11 @@ type Kademlia struct {
 }
 
 // NewKademlia creates and initializes a new Kademlia node
-func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
+func NewKademlia(network *Network, routingTable *RoutingTable, taskList []Task) *Kademlia {
 	return &Kademlia{
 		Network:      network,
 		RoutingTable: routingTable,
+		Tasks:        taskList,
 	}
 }
 
@@ -49,7 +36,8 @@ func CreateKademliaNode(address string) *Kademlia {
 	network := &Network{
 		MessageCh: messageCh,
 	}
-	kademliaNode := NewKademlia(network, routingTable)
+	taskList := make([]Task, 0)
+	kademliaNode := NewKademlia(network, routingTable, taskList)
 	return kademliaNode
 }
 
@@ -284,75 +272,30 @@ func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
 }
 
-// CheckContactStatus pings a contact and returns true if its alive and false if not
-func (kademlia *Kademlia) CheckContactStatus(contact *Contact) bool {
+// CheckContactStatus creates a ping task for a contact and adds it to the task list.
+func (kademlia *Kademlia) CheckContactStatus(contact *Contact) {
+	// Generate a new command ID for the ping task
+	commandID := NewCommandID()
 
-	id := kademlia.RoutingTable.me.ID.String()
-	messageString := fmt.Sprintf("ping:%s:ping", id)
+	// Create a message string for the ping
+	messageString := fmt.Sprintf("ping:%s:%d:ping", kademlia.RoutingTable.me.ID.String(), commandID)
+
+	// Create a new task for this ping operation (without ClosestContacts or WaitingForReturns)
+	task := Task{
+		CommandType: "ping",
+		CommandID:   commandID,
+		TargetID:    nil, // No specific target for ping
+		StartTime:   time.Now(),
+		// We omit ClosestContacts, ContactedNodes, and WaitingForReturns since ping doesn't need them.
+	}
+
+	// Add the task to the node's task list
+	kademlia.Tasks = append(kademlia.Tasks, task)
+
+	// Send the ping message to the contact
 	kademlia.Network.SendPingMessage(contact, messageString)
-	contactID := contact.ID.String()
-	hasPonged := ponged{
-		ID:        contactID,
-		hasPonged: false,
-	}
 
-	pongList = append(pongList, hasPonged)
-	chPong = make(chan string)
-	timeOut := time.After(pongTimer * time.Second)
-	waitTime := time.Second
-	var pong bool = false //gets set to true if handlePongMessage is called (somehow)
-
-	//det var ngt mer jag skulle göra med pongList men har hjärnsläpp atm och kommer förhoppningsvis på det strax
-	//ponglist finns specifikt för att för att hantera ifall pongs kommer i "fel" ordning, om man vill kolla statusen på flera kontakter
-
-	for {
-		select {
-		case ID := <-chPong:
-			IDPonged := ponged{
-				ID:        ID,
-				hasPonged: false,
-			}
-			if ID == contactID {
-				pong = true
-				fmt.Println("The correct contact answered")
-				removeFromList(pongList, findListIndex(pongList, contactID))
-				return pong
-			} else {
-				fmt.Println("Pong recieved from incorrect contact")
-				if slices.Contains(pongList, IDPonged) {
-					IDPonged.hasPonged = true
-				}
-			}
-		case <-timeOut:
-			fmt.Println("Waited five seconds, contact presumed dead")
-			return pong
-		default:
-			fmt.Println("still waiting for pong")
-		}
-		time.Sleep(waitTime)
-		if hasPonged.hasPonged == true {
-			pong = true
-			return pong
-		}
-	}
-}
-
-func removeFromList(s []ponged, i int) []ponged {
-	if i == -1 {
-		fmt.Println("index out of range")
-		return s
-	}
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
-}
-
-func findListIndex(s []ponged, ID string) int {
-	for i, IDs := range s {
-		if IDs.ID == ID {
-			return i
-		}
-	}
-	return -1
+	log.Printf("Ping task added for contact %s with CommandID %d", contact.Address, commandID)
 }
 
 func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
@@ -384,9 +327,8 @@ func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) b
 		//ping amandas function
 		//if oldest contact alive {
 		oldContact := bucket.list.Back()
-		if kademlia.CheckContactStatus(oldContact.Value.(*Contact)) == true {
+		if kademlia.CheckContactStatus(&oldContact) == true {
 			return false
-
 		}
 
 		//If not alive
@@ -401,19 +343,4 @@ func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) b
 
 func NewCommandID() int {
 	return rand.Int()
-}
-
-func removeFromCommandIDList(ID int) []int {
-	for i, IDs := range commandIDlist {
-		if IDs == ID {
-			if i == -1 {
-				fmt.Println("index out of range")
-				return commandIDlist
-			}
-			// Replace the current element with the last one and then truncate the slice
-			commandIDlist[i] = commandIDlist[len(commandIDlist)-1]
-			return commandIDlist[:len(commandIDlist)-1]
-		}
-	}
-	return commandIDlist
 }

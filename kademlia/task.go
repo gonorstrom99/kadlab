@@ -84,16 +84,6 @@ func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) 
 	}
 }
 
-// IsContactInClosestContacts checks if a given contact is in the ClosestContacts list for the task
-func (task *Task) IsContactInClosestContacts(contact Contact) bool {
-	for _, closestContact := range task.ClosestContacts {
-		if closestContact.ID.Equals(contact.ID) {
-			return true
-		}
-	}
-	return false
-}
-
 // MarkTaskAsCompleted updates the task when all contacts have responded or it is considered done
 func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 	task, err := kademlia.FindTaskByCommandID(commandID)
