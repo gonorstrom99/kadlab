@@ -25,9 +25,9 @@ type Task struct {
 	WaitingForReturns []WaitingContact // Alpha number of nodes that we're waiting for returns from
 }
 
-// AddTaskFromMessage takes a Message struct and a contact, parses the information,
-// and adds the task to the Kademlia node's task list.
-func (kademlia *Kademlia) AddTaskFromMessage(msg Message, contact *Contact) {
+// UpdateTaskFromMessage takes a Message struct and a contact, parses the information,
+// and updates the task to the Kademlia node's task list.
+func (kademlia *Kademlia) UpdateTaskFromMessage(msg Message, contact *Contact) {
 	// Parse the message fields from the Message struct
 	commandType := msg.Command
 	commandID, err := strconv.Atoi(msg.CommandID)
