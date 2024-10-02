@@ -118,7 +118,14 @@ func (kademlia *Kademlia) checkTTLs() {
 			if time.Since(waitingContact.SentTime) > ttl {
 				// Contact has timed out, remove it from WaitingForReturns
 				log.Printf("Contact %s in task %d has timed out", waitingContact.Contact.ID.String(), task.CommandID)
+				if task.CommandType == "ping" {
+					bucketIndex := kademlia.RoutingTable.getBucketIndex(task.TargetID)
+					bucket := kademlia.RoutingTable.buckets[bucketIndex]
+					bucket.AddContact(task.ReplaceContact)
 
+					kademlia.RemoveTask(task.CommandID)
+					continue
+				}
 				// Try to find the next closest contact that hasn't been contacted yet
 				for _, closestContact := range task.ClosestContacts {
 					if !kademlia.isContactInList(task.ContactedNodes, closestContact) {
@@ -187,9 +194,8 @@ func (kademlia *Kademlia) handlePongMessage(contact *Contact, msg Message) {
 		return
 	}
 
-	// Try to find the task with the matching CommandID
-	task, err := kademlia.FindTaskByCommandID(commandID)
-	if err != nil {
+	// Try to find the task with the matching CommandID (you can omit `task` if it's not needed)
+	if _, err := kademlia.FindTaskByCommandID(commandID); err != nil {
 		log.Printf("Task with CommandID %d not found", commandID)
 		return
 	}
@@ -345,15 +351,7 @@ func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 	if kademlia.RoutingTable.IsContactInRoutingTable(newContact) {
 		bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
 		bucket := kademlia.RoutingTable.buckets[bucketIndex]
-		// Iterate over the bucket to find the contact and move it to the front
-		for e := bucket.list.Front(); e != nil; e = e.Next() {
-			contact := e.Value.(Contact)
-			if contact.ID.Equals(newContact.ID) {
-				// Move this contact to the front of the list
-				bucket.list.MoveToFront(e)
-				break
-			}
-		}
+		bucket.AddContact(*newContact)
 	}
 
 	// if bucket is full - ping oldest contact to check if alive and creat ping task
