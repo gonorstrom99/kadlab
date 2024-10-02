@@ -336,6 +336,42 @@ func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
 }
 
+func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
+	//if it should be added it is done in the if, if the oldest node is
+	//alive it is moved to the front in the else, if the oldest node is
+	if kademlia.RoutingTable.me == *newContact {
+		return
+	}
+	if kademlia.RoutingTable.IsContactInRoutingTable(newContact) {
+		bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
+		bucket := kademlia.RoutingTable.buckets[bucketIndex]
+		// Iterate over the bucket to find the contact and move it to the front
+		for e := bucket.list.Front(); e != nil; e = e.Next() {
+			contact := e.Value.(Contact)
+			if contact.ID.Equals(newContact.ID) {
+				// Move this contact to the front of the list
+				bucket.list.MoveToFront(e)
+				break
+			}
+		}
+	}
+
+	// if bucket is full - ping oldest contact to check if alive and creat ping task
+	bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
+	bucket := kademlia.RoutingTable.buckets[bucketIndex]
+	if kademlia.RoutingTable.IsBucketFull(bucket) {
+		// Get the oldest contact (back of the list)
+		oldestElement := bucket.list.Back()
+		if oldestElement != nil {
+			// Extract *Contact from *list.Element
+			oldContact := oldestElement.Value.(*Contact)
+
+			// Ping the oldest contact to check if it's alive
+			kademlia.CheckContactStatus(oldContact, newContact)
+		}
+	}
+}
+
 // CheckContactStatus creates a ping task for a contact and adds it to the task list.
 func (kademlia *Kademlia) CheckContactStatus(oldContact *Contact, newContact *Contact) {
 	// Generate a new command ID for the ping task
@@ -361,38 +397,6 @@ func (kademlia *Kademlia) CheckContactStatus(oldContact *Contact, newContact *Co
 	kademlia.Network.SendPingMessage(oldContact, messageString)
 
 	log.Printf("Ping task added for contact %s with CommandID %d", oldContact.Address, commandID)
-}
-
-func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
-	//if it should be added it is done in the if, if the oldest node is
-	//alive it is moved to the front in the else, if the oldest node is
-	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
-	if kademlia.RoutingTable.me == *contact {
-		return
-	}
-	kademlia.shouldContactBeAddedToRoutingTable(contact)
-}
-
-func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(newContact *Contact) {
-	// checks if the contact is already in its respective bucket.
-	if kademlia.RoutingTable.IsContactInRoutingTable(newContact) {
-		return
-	}
-
-	// if bucket is full - ping oldest contact to check if alive
-	bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
-	bucket := kademlia.RoutingTable.buckets[bucketIndex]
-	if kademlia.RoutingTable.IsBucketFull(bucket) {
-		// Get the oldest contact (back of the list)
-		oldestElement := bucket.list.Back()
-		if oldestElement != nil {
-			// Extract *Contact from *list.Element
-			oldContact := oldestElement.Value.(*Contact)
-
-			// Ping the oldest contact to check if it's alive
-			kademlia.CheckContactStatus(oldContact, newContact)
-		}
-	}
 }
 
 // NewCommandID give a new command ID random int
