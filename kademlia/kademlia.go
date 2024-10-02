@@ -99,7 +99,7 @@ func (kademlia *Kademlia) processMessages() {
 				log.Printf("Received unknown message type '%s' from %s and commandID: %s", msg.Command, msg.SenderAddress, msg.CommandID)
 			}
 
-		case <-time.After(1 * time.Millisecond): // If no message is received after 1 ms
+		case <-time.After(100 * time.Millisecond): // If no message is received after 100 ms
 			// Perform some other action when no messages are received
 			kademlia.checkTTLs()
 		}
@@ -168,7 +168,7 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 	log.Printf("Received ping from %s", contact.Address)
 
 	// Prepare the pong message with the appropriate format
-	// The format will be "pong:<senderID>:<senderAddress>"
+	// The format will be "pong:<senderID>:<senderAddress>:pong"
 	id := kademlia.RoutingTable.me.ID.String()
 
 	pongMessage := fmt.Sprintf("pong:%s:%s:pong", msg.CommandID, id)
@@ -180,7 +180,27 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 }
 
 func (kademlia *Kademlia) handlePongMessage(contact *Contact, msg Message) {
+	// Parse the CommandID from the message
+	commandID, err := strconv.Atoi(msg.CommandID)
+	if err != nil {
+		log.Printf("Invalid CommandID in pong message: %s", msg.CommandID)
+		return
+	}
 
+	// Try to find the task with the matching CommandID
+	task, err := kademlia.FindTaskByCommandID(commandID)
+	if err != nil {
+		log.Printf("Task with CommandID %d not found", commandID)
+		return
+	}
+
+	// Task is found, now remove it
+	kademlia.RemoveTask(commandID)
+	log.Printf("Task with CommandID %d removed after pong received", commandID)
+
+	// Use AddContact from the routing table to handle updating or adding the contact
+	kademlia.RoutingTable.AddContact(*contact)
+	log.Printf("Contact %s added or updated in the routing table", contact.Address)
 }
 
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
@@ -284,16 +304,6 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Messag
 	kademlia.MarkTaskAsCompleted(task.CommandID)
 }
 
-// isContactInList checks if a contact is already in a list of contacts
-func (kademlia *Kademlia) isContactInList(contacts []Contact, contact Contact) bool {
-	for _, c := range contacts {
-		if c.ID.Equals(contact.ID) {
-			return true
-		}
-	}
-	return false
-}
-
 // handleFindValue processes a "findValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
 	// TODO: Implement the logic for handling a "findValue" message
@@ -327,7 +337,7 @@ func (kademlia *Kademlia) Store(data []byte) {
 }
 
 // CheckContactStatus creates a ping task for a contact and adds it to the task list.
-func (kademlia *Kademlia) CheckContactStatus(contact *Contact) {
+func (kademlia *Kademlia) CheckContactStatus(oldContact *Contact, newContact *Contact) {
 	// Generate a new command ID for the ping task
 	commandID := NewCommandID()
 
@@ -338,18 +348,19 @@ func (kademlia *Kademlia) CheckContactStatus(contact *Contact) {
 	task := Task{
 		CommandType: "ping",
 		CommandID:   commandID,
-		TargetID:    contact.ID,
+		TargetID:    oldContact.ID,
 		StartTime:   time.Now(),
 		// We omit ClosestContacts, ContactedNodes, and WaitingForReturns since ping doesn't need them.
+		ReplaceContact: *newContact,
 	}
 
 	// Add the task to the node's task list
 	kademlia.Tasks = append(kademlia.Tasks, task)
 
 	// Send the ping message to the contact
-	kademlia.Network.SendPingMessage(contact, messageString)
+	kademlia.Network.SendPingMessage(oldContact, messageString)
 
-	log.Printf("Ping task added for contact %s with CommandID %d", contact.Address, commandID)
+	log.Printf("Ping task added for contact %s with CommandID %d", oldContact.Address, commandID)
 }
 
 func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
@@ -358,43 +369,33 @@ func (kademlia *Kademlia) updateRoutingTable(contact *Contact) {
 	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
 	if kademlia.RoutingTable.me == *contact {
 		return
-	} else if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
-		kademlia.RoutingTable.AddContact(*contact)
-	} else {
-		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
-		bucket := kademlia.RoutingTable.buckets[bucketIndex]
-		bucket.list.MoveToFront(bucket.list.Back())
-
 	}
+	kademlia.shouldContactBeAddedToRoutingTable(contact)
 }
 
-func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
-	// checks if the contact is already in it's respective bucket.
-	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
-		return true
+func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(newContact *Contact) {
+	// checks if the contact is already in its respective bucket.
+	if kademlia.RoutingTable.IsContactInRoutingTable(newContact) {
+		return
 	}
 
 	// if bucket is full - ping oldest contact to check if alive
-	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+	bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
 	bucket := kademlia.RoutingTable.buckets[bucketIndex]
-	if kademlia.RoutingTable.IsBucketFull(bucket) == true {
-		//ping amandas function
-		//if oldest contact alive {
-		oldContact := bucket.list.Back()
-		if kademlia.CheckContactStatus(oldContact) == true {
-			return false
+	if kademlia.RoutingTable.IsBucketFull(bucket) {
+		// Get the oldest contact (back of the list)
+		oldestElement := bucket.list.Back()
+		if oldestElement != nil {
+			// Extract *Contact from *list.Element
+			oldContact := oldestElement.Value.(*Contact)
+
+			// Ping the oldest contact to check if it's alive
+			kademlia.CheckContactStatus(oldContact, newContact)
 		}
-
-		//If not alive
-		//delete the dead contact
-		bucket.list.Remove(bucket.list.Back())
-		return true
-
 	}
-
-	return true
 }
 
+// NewCommandID give a new command ID random int
 func NewCommandID() int {
 	return rand.Int()
 }

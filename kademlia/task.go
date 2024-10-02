@@ -23,6 +23,7 @@ type Task struct {
 	ClosestContacts   []Contact        // for storing nodes that are closest
 	ContactedNodes    []Contact        // All the contacted nodes that we shouldn't contact again
 	WaitingForReturns []WaitingContact // Alpha number of nodes that we're waiting for returns from
+	ReplaceContact    Contact          // Contact to replace if no pong was recived
 }
 
 // UpdateTaskFromMessage takes a Message struct and a contact, parses the information,
