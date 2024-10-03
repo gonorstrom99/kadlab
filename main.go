@@ -40,9 +40,9 @@ func main() {
 
 	//node 1 is sending a lookupmesseage to node 2 to look up node 1, it then adds node 3, 4, and 5 to its routingtable
 	fmt.Println("(file: main) Sending lookUpContact from second node to first node...")
-	lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", KademliaNode1.Network.ID.String(), KademliaNode1.Network.ID.String())
-	KademliaNode1.Network.SendMessage(KademliaNode2.RoutingTable.GetMe(), lookupMessage)
-
+	// lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", KademliaNode1.Network.ID.String(), kademlia.NewCommandID(), KademliaNode1.Network.ID.String())
+	// KademliaNode1.Network.SendMessage(KademliaNode2.RoutingTable.GetMe(), lookupMessage)
+	KademliaNode1.StartLookUpContact(*KademliaNode2.RoutingTable.GetMe(), *KademliaNode1.RoutingTable.GetMe())
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 	time.Sleep(2 * time.Second)
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe()))

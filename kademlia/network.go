@@ -18,6 +18,7 @@ type Network struct {
 type Message struct {
 	Command       string
 	CommandInfo   string
+	CommandID     string
 	SenderID      string
 	SenderAddress string
 }
@@ -57,7 +58,7 @@ func (network *Network) Listen(contact Contact) error {
 		//log.Printf("Message received: %s from %s", message, contactAddress)
 
 		// Split the message by ":" to extract command, senderID, and command info
-		parts := strings.SplitN(message, ":", 3) // Expect 3 parts now: <command>, <senderID>, <commandInfo>
+		parts := strings.SplitN(message, ":", 4) // Expect 4 parts now: <command>, <senderID>,<commandID>, <commandInfo>
 
 		// Log the split parts for diagnosis
 		// log.Printf("Message split into %d parts", len(parts))
@@ -66,7 +67,7 @@ func (network *Network) Listen(contact Contact) error {
 		// }
 
 		// Validate the split result
-		// if len(parts) != 3 {
+		// if len(parts) != 4 {
 		// 	log.Printf("Invalid message format received from %s: %s", contactAddress, message)
 		// 	continue
 		// }
@@ -74,13 +75,15 @@ func (network *Network) Listen(contact Contact) error {
 		// Extract the message parts
 		command := parts[0]
 		senderID := parts[1]
-		commandInfo := parts[2]
+		commandID := parts[2]
+		commandInfo := parts[3]
 
 		// Log and send the message to the channel for processing
 		//log.Printf("Network received message: %s from %s (ID: %s, commandInfo: %s)", command, contactAddress, senderID, commandInfo)
 		network.MessageCh <- Message{
 			Command:       command,
 			CommandInfo:   commandInfo,
+			CommandID:     commandID,
 			SenderID:      senderID,
 			SenderAddress: contactAddress, // Use the remote address (UDP sender address)
 		}
