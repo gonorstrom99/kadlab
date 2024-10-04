@@ -110,56 +110,53 @@ func (kademlia *Kademlia) StartLookupContact(lookupTarget Contact) {
 // processMessages listens to the Network's channel and handles messages or performs other tasks if no messages are available
 func (kademlia *Kademlia) processMessages() {
 
-	for msg := range kademlia.Network.MessageCh {
-		log.Printf("Kademlia processing message: '%s' from %s with nodeID: %s and commandID: %s", msg.Command, msg.SenderAddress, msg.SenderID, msg.CommandID)
-		for {
-			select {
-			case msg := <-kademlia.Network.MessageCh: // If there's a message in the channel
-				log.Printf("Kademlia processing message: '%s' from %s with nodeID: %s and commandID: %s", msg.Command, msg.SenderAddress, msg.SenderID, msg.CommandID)
+	for {
+		select {
+		case msg := <-kademlia.Network.MessageCh: // If there's a message in the channel
+			log.Printf("Kademlia processing message: '%s' from %s with nodeID: %s and commandID: %s", msg.Command, msg.SenderAddress, msg.SenderID, msg.CommandID)
 
-				// Create a contact using the sender's ID and address
-				contact := &Contact{
-					ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
-					Address: msg.SenderAddress,           // The sender's IP and port
-				}
-
-				// Handle different message types based on the "Command" field
-				switch msg.Command {
-				case "ping":
-					// Respond with "pong" to a ping message
-					kademlia.handlePing(contact, msg)
-
-				case "pong":
-					kademlia.handlePongMessage(contact, msg)
-					log.Printf("Received pong from %s", msg.SenderAddress)
-
-				case "lookUpContact":
-					kademlia.handleLookUpContact(contact, msg)
-
-				case "returnLookUpContact":
-					kademlia.handleReturnLookUpContact(contact, msg)
-
-				case "findValue":
-					kademlia.handleFindValue(contact, msg)
-
-				case "returnFindValue":
-					kademlia.handleReturnFindValue(contact, msg)
-
-				case "storeValue":
-					kademlia.handleStoreValue(contact, msg)
-
-				case "returnStoreValue":
-					kademlia.handleReturnStoreValue(contact, msg)
-
-				default:
-					// Log unknown command types
-					log.Printf("Received unknown message type '%s' from %s and commandID: %s", msg.Command, msg.SenderAddress, msg.CommandID)
-				}
-
-			case <-time.After(100 * time.Millisecond): // If no message is received after 100 ms
-				// Perform some other action when no messages are received
-				kademlia.checkTTLs()
+			// Create a contact using the sender's ID and address
+			contact := &Contact{
+				ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
+				Address: msg.SenderAddress,           // The sender's IP and port
 			}
+
+			// Handle different message types based on the "Command" field
+			switch msg.Command {
+			case "ping":
+				// Respond with "pong" to a ping message
+				kademlia.handlePing(contact, msg)
+
+			case "pong":
+				kademlia.handlePongMessage(contact, msg)
+				log.Printf("Received pong from %s", msg.SenderAddress)
+
+			case "lookUpContact":
+				kademlia.handleLookUpContact(contact, msg)
+
+			case "returnLookUpContact":
+				kademlia.handleReturnLookUpContact(contact, msg)
+
+			case "findValue":
+				kademlia.handleFindValue(contact, msg)
+
+			case "returnFindValue":
+				kademlia.handleReturnFindValue(contact, msg)
+
+			case "storeValue":
+				kademlia.handleStoreValue(contact, msg)
+
+			case "returnStoreValue":
+				kademlia.handleReturnStoreValue(contact, msg)
+
+			default:
+				// Log unknown command types
+				log.Printf("Received unknown message type '%s' from %s and commandID: %s", msg.Command, msg.SenderAddress, msg.CommandID)
+			}
+
+		case <-time.After(255 * time.Millisecond): // If no message is received after 100 ms
+			// Perform some other action when no messages are received
+			kademlia.checkTTLs()
 		}
 	}
 }
@@ -422,7 +419,9 @@ func (kademlia *Kademlia) LookupData(hash string) {
 func (kademlia *Kademlia) Store(data []byte) {
 	// TODO
 }
-
+func (kademlia *Kademlia) UpdateRoutingTable(newContact *Contact) {
+	kademlia.updateRoutingTable(newContact)
+}
 func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 	//if it should be added it is done in the if, if the oldest node is
 	//alive it is moved to the front in the else, if the oldest node is
@@ -448,6 +447,10 @@ func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 			// Ping the oldest contact to check if it's alive
 			kademlia.CheckContactStatus(oldContact, newContact)
 		}
+	} else {
+		bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
+		bucket := kademlia.RoutingTable.buckets[bucketIndex]
+		bucket.AddContact(*newContact)
 	}
 }
 
