@@ -75,6 +75,9 @@ func (routingTable *RoutingTable) getBucketIndex(id *KademliaID) int {
 
 	return IDLength*8 - 1
 }
+func (routingTable *RoutingTable) getBucket(index int) bucket {
+	return *routingTable.buckets[index]
+}
 
 // IsContactInRoutingTable checks if a contact is in the routing table
 func (routingTable *RoutingTable) IsContactInRoutingTable(contact *Contact) bool {
