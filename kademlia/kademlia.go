@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const pongTimer = 5 //sekunder
-
 // Kademlia node
 type Kademlia struct {
 	Network      *Network
