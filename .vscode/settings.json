@@ -1,0 +1,7 @@
+{
+    "editor.scrollbar.verticalScrollbarSize": 5,
+    "editor.scrollbar.horizontalScrollbarSize": 12,
+    "editor.scrollbar.vertical": "auto",
+    "editor.scrollbar.horizontal": "auto",
+    "terminal.integrated.tabs.defaultIcon": "folder"
+}
