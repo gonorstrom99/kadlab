@@ -22,12 +22,11 @@ type Task struct {
 	ClosestContacts   []Contact        // for storing nodes that are closest
 	ContactedNodes    []Contact        // All the contacted nodes that we shouldn't contact again
 	WaitingForReturns []WaitingContact // Alpha number of nodes that we're waiting for returns from
-	ReplaceContact    Contact          // Contact to replace if no pong was recived
 }
 
-// UpdateTaskFromMessage takes a Message struct and a contact, parses the information,
-// and updates the task to the Kademlia node's task list.
-func (kademlia *Kademlia) UpdateTaskFromMessage(msg Message, contact *Contact) {
+// AddTaskFromMessage takes a Message struct and a contact, parses the information,
+// and adds the task to the Kademlia node's task list.
+func (kademlia *Kademlia) AddTaskFromMessage(msg Message, contact *Contact) {
 	// Parse the message fields from the Message struct
 	commandType := msg.Command
 	commandID, err := strconv.Atoi(msg.CommandID)
@@ -144,26 +143,6 @@ func (task *Task) IsContactInClosestContacts(contact Contact) bool {
 		}
 	}
 	return false
-
-}
-
-// RemoveContactFromTask removes a contact from the WaitingForReturns list when they respond
-func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) {
-	task, err := kademlia.FindTaskByCommandID(commandID)
-	if err != nil {
-		log.Printf("Task with CommandID %d not found, cannot remove contact", commandID)
-		return
-	}
-
-	// Remove contact from WaitingForReturns
-	for i, waitingContact := range task.WaitingForReturns {
-		if waitingContact.Contact.ID.Equals(contact.ID) {
-			// Remove the contact from the list
-			task.WaitingForReturns = append(task.WaitingForReturns[:i], task.WaitingForReturns[i+1:]...)
-			log.Printf("Contact %s removed from WaitingForReturns in task %d", contact.ID.String(), commandID)
-			break
-		}
-	}
 }
 
 // MarkTaskAsCompleted updates the task when all contacts have responded or it is considered done
@@ -207,11 +186,9 @@ func (kademlia *Kademlia) RemoveTask(commandID int) {
 	for _, task := range kademlia.Tasks {
 		if task.CommandID != commandID {
 			remainingTasks = append(remainingTasks, task)
-
 		}
 	}
 	kademlia.Tasks = remainingTasks
-
 }
 
 // HasTaskTimedOut checks whether a task has timed out based on a given duration.

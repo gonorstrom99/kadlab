@@ -18,8 +18,6 @@ func NewRoutingTable(me Contact) *RoutingTable {
 	routingTable.me = me
 	return routingTable
 }
-
-// GetMe returns the self contact
 func (routingTable *RoutingTable) GetMe() *Contact {
 	return &routingTable.me
 }
