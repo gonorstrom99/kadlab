@@ -1,5 +1,7 @@
 package kademlia
 
+// en test kommentar
+
 import (
 	"fmt"
 	"log"
