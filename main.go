@@ -29,7 +29,8 @@ func main() {
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode5.RoutingTable.GetMe())
-	KademliaNode3.RoutingTable.AddContact(*KademliaNode6.RoutingTable.GetMe())
+	KademliaNode5.RoutingTable.AddContact(*KademliaNode6.RoutingTable.GetMe())
+	KademliaNode1.UpdateRoutingTable(KademliaNode6.RoutingTable.GetMe())
 
 	// Step 1: Send a ping message from the second node to the first node
 	//fmt.Printf("Sending ping from second node to first node: %v\n", KademliaNode2.)
@@ -39,10 +40,8 @@ func main() {
 	time.Sleep(1 * time.Second)
 
 	//node 1 is sending a lookupmesseage to node 2 to look up node 1, it then adds node 3, 4, and 5 to its routingtable
-	fmt.Println("(file: main) Sending lookUpContact from second node to first node...")
-	// lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", KademliaNode1.Network.ID.String(), kademlia.NewCommandID(), KademliaNode1.Network.ID.String())
-	// KademliaNode1.Network.SendMessage(KademliaNode2.RoutingTable.GetMe(), lookupMessage)
-	KademliaNode1.StartLookupContact(*KademliaNode6.RoutingTable.GetMe())
+
+	//KademliaNode1.StartLookupContact(*KademliaNode6.RoutingTable.GetMe())
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 	time.Sleep(2 * time.Second)
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe()))
