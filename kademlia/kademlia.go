@@ -36,10 +36,11 @@ type Kademlia struct {
 }
 
 // NewKademlia creates and initializes a new Kademlia node
-func NewKademlia(network *Network, routingTable *RoutingTable) *Kademlia {
+func NewKademlia(network *Network, routingTable *RoutingTable, taskList []Task) *Kademlia {
 	return &Kademlia{
 		Network:      network,
 		RoutingTable: routingTable,
+		Tasks:        taskList,
 	}
 }
 
@@ -53,7 +54,8 @@ func CreateKademliaNode(address string) *Kademlia {
 		ID:        *ID,
 		MessageCh: messageCh,
 	}
-	kademliaNode := NewKademlia(network, routingTable)
+	taskList := make([]Task, 0)
+	kademliaNode := NewKademlia(network, routingTable, taskList)
 	return kademliaNode
 }
 
@@ -107,7 +109,7 @@ func (kademlia *Kademlia) StartLookupContact(lookupTarget Contact) {
 
 }
 
-// processMessages listens to the Network's channel and handles messages
+// processMessages listens to the Network's channel and handles messages or performs other tasks if no messages are available
 func (kademlia *Kademlia) processMessages() {
 
 	for {
@@ -230,7 +232,7 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 	log.Printf("Received ping from %s", contact.Address)
 
 	// Prepare the pong message with the appropriate format
-	// The format will be "pong:<senderID>:<senderAddress>"
+	// The format will be "pong:<senderID>:<senderAddress>:pong"
 	id := kademlia.RoutingTable.me.ID.String()
 
 	pongMessage := fmt.Sprintf("pong:%s:%s:pong", msg.CommandID, id)
@@ -242,7 +244,26 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 }
 
 func (kademlia *Kademlia) handlePongMessage(contact *Contact, msg Message) {
-	chPong <- contact.ID.String()
+	// Parse the CommandID from the message
+	commandID, err := strconv.Atoi(msg.CommandID)
+	if err != nil {
+		log.Printf("Invalid CommandID in pong message: %s", msg.CommandID)
+		return
+	}
+
+	// Try to find the task with the matching CommandID (you can omit `task` if it's not needed)
+	if _, err := kademlia.FindTaskByCommandID(commandID); err != nil {
+		log.Printf("Task with CommandID %d not found", commandID)
+		return
+	}
+
+	// Task is found, now remove it
+	kademlia.RemoveTask(commandID)
+	log.Printf("Task with CommandID %d removed after pong received", commandID)
+
+	// Use AddContact from the routing table to handle updating or adding the contact
+	kademlia.RoutingTable.AddContact(*contact)
+	log.Printf("Contact %s added or updated in the routing table", contact.Address)
 }
 
 func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
@@ -406,27 +427,17 @@ func (kademlia *Kademlia) UpdateRoutingTable(newContact *Contact) {
 func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 	//if it should be added it is done in the if, if the oldest node is
 	//alive it is moved to the front in the else, if the oldest node is
-	//dead it is removed in the "shouldContactBeAddedToRoutingTable".
-	if kademlia.RoutingTable.me == *contact {
+	if kademlia.RoutingTable.me == *newContact {
 		return
-	} else if kademlia.shouldContactBeAddedToRoutingTable(contact) == true {
-		kademlia.RoutingTable.AddContact(*contact)
-	} else {
-		bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+	}
+	if kademlia.RoutingTable.IsContactInRoutingTable(newContact) {
+		bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
 		bucket := kademlia.RoutingTable.buckets[bucketIndex]
-		bucket.list.MoveToFront(bucket.list.Back())
-
-	}
-}
-
-func (kademlia *Kademlia) shouldContactBeAddedToRoutingTable(contact *Contact) bool {
-	// checks if the contact is already in it's respective bucket.
-	if kademlia.RoutingTable.IsContactInRoutingTable(contact) == true {
-		return true
+		bucket.AddContact(*newContact)
 	}
 
-	// if bucket is full - ping oldest contact to check if alive
-	bucketIndex := kademlia.RoutingTable.getBucketIndex(contact.ID)
+	// if bucket is full - ping oldest contact to check if alive and creat ping task
+	bucketIndex := kademlia.RoutingTable.getBucketIndex(newContact.ID)
 	bucket := kademlia.RoutingTable.buckets[bucketIndex]
 	if kademlia.RoutingTable.IsBucketFull(bucket) {
 		// Get the oldest contact (back of the list)
