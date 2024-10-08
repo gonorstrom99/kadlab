@@ -1,15 +1,30 @@
 package kademlia
 
 import (
+	"crypto/sha1"
 	"encoding/hex"
 	"math/rand"
 )
 
 // IDLength the static number of bytes in a KademliaID
-const IDLength = 10
+const IDLength = 20
 
 // KademliaID type definition of a KademliaID
 type KademliaID [IDLength]byte
+
+func HashKademliaID(input string) KademliaID {
+
+	// Create a new SHA-1 hash
+	hash := sha1.New()
+
+	// Write the string to the hasher
+	hash.Write([]byte(input))
+
+	// Get the resulting 20-byte hash
+	hashedBytes := hash.Sum(nil)
+
+	return [IDLength]byte(hashedBytes)
+}
 
 // NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
