@@ -11,22 +11,7 @@ import (
 	"time"
 )
 
-const pongTimer = 5 //sekunder
-var chPong chan string
-
 const alpha = 3 //the number of nodes to be contacted simultaneosly
-
-type ponged struct {
-	ID        string
-	hasPonged bool
-}
-
-// use newCommandID to get a command ID, even though it's just a random int
-// för att kolla om ett ID finns i listan, använd slices.contains(listan, ID)
-// kan ha flera listor för olika commands om man vill (en för lookupcontact etc)
-var commandIDlist []int
-
-var pongList []ponged
 
 // Kademlia node
 type Kademlia struct {
@@ -532,21 +517,6 @@ func (kademlia *Kademlia) CheckContactStatus(oldContact *Contact, newContact *Co
 // NewCommandID give a new command ID random int
 func NewCommandID() int {
 	return rand.Int()
-}
-
-func removeFromCommandIDList(ID int) []int {
-	for i, IDs := range commandIDlist {
-		if IDs == ID {
-			if i == -1 {
-				fmt.Println("index out of range")
-				return commandIDlist
-			}
-			// Replace the current element with the last one and then truncate the slice
-			commandIDlist[i] = commandIDlist[len(commandIDlist)-1]
-			return commandIDlist[:len(commandIDlist)-1]
-		}
-	}
-	return commandIDlist
 }
 
 // FindTaskByCommandID takes a Message and looks for a matching Task with the same CommandID in the task list
