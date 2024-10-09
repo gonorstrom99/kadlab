@@ -71,6 +71,7 @@ func (kademlia *Kademlia) Start() {
 	go kademlia.processMessages()
 }
 
+// StartLookupContact starts the lookup process
 func (kademlia *Kademlia) StartLookupContact(lookupTarget Contact) {
 	//Ska inte ta en recipient utan vilka som ska skickas till räknas ut av routingtable i guess
 	commandID := NewCommandID()
@@ -390,6 +391,45 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Messag
 	// Optionally, log that the contacts have been added to the routing table
 }
 
+// StartFindValue starts the process of finding the right node that holds the searched value
+func (kademlia *Kademlia) StartFindValue(value string, msg Message) {
+
+	commandID := NewCommandID()
+	task := kademlia.CreateTask("findValue", commandID, value)
+	kademlia.Tasks = append(kademlia.Tasks, *task)
+	///the task is also appended to the task list
+	task.ClosestContacts = kademlia.RoutingTable.FindClosestContacts(lookupTarget.ID, bucketSize)
+	for _, contact := range task.ClosestContacts {
+		log.Println("(File: kademlia: Function: StartLookupContact) Contact Address:", contact.Address)
+	}
+	task.SortContactsByDistance()
+	for _, contact := range task.ClosestContacts {
+		log.Println("(File: kademlia: Function: StartLookupContact) Contact Address:", contact.Address)
+	}
+	// lägger till de 20 närmsta noderna till closestContacts och sortera
+
+	//skicka lookupmsg till de 3 närmsta och lägg till dessa 3 i ContactedNodes
+	//och WaitingForReturns (med tiden msg skickades)
+	log.Printf("(File: Kademlia, function: StartLookupContact) senderID: =%s, targetID=%s", kademlia.RoutingTable.me.ID.String(), lookupTarget.ID.String())
+	limit := alpha
+	if len(task.ClosestContacts) < alpha {
+		limit = len(task.ClosestContacts)
+	}
+	for i := 0; i < limit; i++ {
+		waitingContact := WaitingContact{
+			SentTime: time.Now(),              // Set the current time as SentTime
+			Contact:  task.ClosestContacts[i], // Use the contact struct
+		}
+		task.WaitingForReturns = append(task.WaitingForReturns, waitingContact)
+		task.ContactedNodes = append(task.ContactedNodes, task.ClosestContacts[i])
+		lookupMessage := fmt.Sprintf("lookUpContact:%s:%d:%s", kademlia.Network.ID.String(), commandID, lookupTarget.ID.String())
+		log.Printf("(File: kademlia: Function: StartLookupContact) lookupmessage:%s", lookupMessage)
+		//log.Printf("(File: kademlia: Function: StartLookupContact) task.closestcontact[i].adress:%d", task.ClosestContacts[i].Address)
+		kademlia.Network.SendMessage(&task.ClosestContacts[i], lookupMessage)
+	}
+
+}
+
 // handleFindValue processes a "findValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
 	// TODO: Implement the logic for handling a "findValue" message
@@ -400,6 +440,12 @@ func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
 func (kademlia *Kademlia) handleReturnFindValue(contact *Contact, msg Message) {
 	// TODO: Implement the logic for handling a "returnFindValue" message
 	log.Printf("(File: kademlia: Function: HandleReturnFindValue) Handling returnFindValue from %s", contact.Address)
+}
+
+// StartStoreValue starts the processes of storing a value
+func (kademlia *Kademlia) StartStoreValue(contact *Contact, msg Message) {
+	// TODO: Implement the logic for handling a "storeValue" message
+	log.Printf("(File: kademlia: Function: HandleStoreValue) Handling storeValue from %s", contact.Address)
 }
 
 // handleStoreValue processes a "storeValue" message
