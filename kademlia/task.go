@@ -3,7 +3,6 @@ package kademlia
 // en test kommentar
 
 import (
-	"log"
 	"sort"
 	"strconv"
 	"time"
@@ -17,7 +16,7 @@ type WaitingContact struct {
 
 // Task represents an ongoing task for the Kademlia node.
 type Task struct {
-	CommandType       string           // The type of task (e.g., "lookUpContact", "findValue")
+	CommandType       string           // The type of task (e.g., "lookUpContact", "ping","findValue", "storevalue")
 	CommandID         int              // The unique identifier for the command
 	TargetID          *KademliaID      // The ID we're looking for (if applicable)
 	StartTime         time.Time        // When the job was started (for timeouts)
@@ -25,6 +24,7 @@ type Task struct {
 	ContactedNodes    []Contact        // All the contacted nodes that we shouldn't contact again
 	WaitingForReturns []WaitingContact // Alpha number of nodes that we're waiting for returns from
 	ReplaceContact    Contact          // Contact to replace if no pong was recived
+	File              string           //file/string that is to be stored
 }
 
 // UpdateTaskFromMessage takes a Message struct and a contact, parses the information,
@@ -34,7 +34,7 @@ func (kademlia *Kademlia) UpdateTaskFromMessage(msg Message, contact *Contact) {
 	commandType := msg.Command
 	commandID, err := strconv.Atoi(msg.CommandID)
 	if err != nil {
-		log.Printf("Invalid command ID: %s", msg.CommandID)
+		//log.Printf("Invalid command ID: %s", msg.CommandID)
 		return
 	}
 	targetID := NewKademliaID(msg.CommandInfo) // Assuming CommandInfo is the targetID in this case
@@ -51,7 +51,7 @@ func (kademlia *Kademlia) UpdateTaskFromMessage(msg Message, contact *Contact) {
 	}
 
 	// Log the creation of the task for debugging purposes
-	log.Printf("Task added: CommandType=%s, CommandID=%d, TargetID=%s", commandType, commandID, targetID.String())
+	//log.Printf("Task added: CommandType=%s, CommandID=%d, TargetID=%s", commandType, commandID, targetID.String())
 
 	// Add the task to the node's task list (assuming you have a task list)
 	kademlia.Tasks = append(kademlia.Tasks, task)
@@ -81,7 +81,7 @@ func (task *Task) FindFirstNotContactedNodeIndex() int {
 	}
 	return -1
 }
-func (task *Task) AreFirstBucketSizeInContactedNodes() bool {
+func (task *Task) AreClosestContactsContacted() bool {
 	limit := bucketSize
 
 	// Ensure we don't go out of bounds if the list has fewer than 20 elements
@@ -95,7 +95,6 @@ func (task *Task) AreFirstBucketSizeInContactedNodes() bool {
 			return false
 		}
 	}
-
 	return true
 }
 
@@ -113,7 +112,7 @@ func (kademlia *Kademlia) CreateTask(Command string, commandID int, targetID *Ka
 	}
 
 	// Log the creation of the task for debugging purposes
-	log.Printf("(File: Task, function: CreateTask) Task added: CommandType=%s, CommandID=%d, TargetID=%s", commandType, commandID, targetID.String())
+	//log.Printf("(File: Task, function: CreateTask) Task added: CommandType=%s, CommandID=%d, TargetID=%s", commandType, commandID, targetID.String())
 
 	// Add the task to the node's task list (assuming you have a task list)
 	return &task
@@ -123,7 +122,7 @@ func (kademlia *Kademlia) CreateTask(Command string, commandID int, targetID *Ka
 func (kademlia *Kademlia) RemoveContactFromWaitingForReturns(commandID int, contactID KademliaID) {
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
-		log.Printf("Task with CommandID %d not found, cannot remove contact", commandID)
+		//log.Printf("Task with CommandID %d not found, cannot remove contact", commandID)
 		return
 	}
 
@@ -132,7 +131,7 @@ func (kademlia *Kademlia) RemoveContactFromWaitingForReturns(commandID int, cont
 		if waitingContact.Contact.ID.Equals(&contactID) {
 			// Remove the contact from the list
 			task.WaitingForReturns = append(task.WaitingForReturns[:i], task.WaitingForReturns[i+1:]...)
-			log.Printf("Contact %s removed from WaitingForReturns in task %d", contactID.String(), commandID)
+			//log.Printf("Contact %s removed from WaitingForReturns in task %d", contactID.String(), commandID)
 			break
 		}
 	}
@@ -153,7 +152,7 @@ func (task *Task) IsContactInClosestContacts(contact Contact) bool {
 func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) {
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
-		log.Printf("Task with CommandID %d not found, cannot remove contact", commandID)
+		//log.Printf("Task with CommandID %d not found, cannot remove contact", commandID)
 		return
 	}
 
@@ -162,7 +161,7 @@ func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) 
 		if waitingContact.Contact.ID.Equals(contact.ID) {
 			// Remove the contact from the list
 			task.WaitingForReturns = append(task.WaitingForReturns[:i], task.WaitingForReturns[i+1:]...)
-			log.Printf("Contact %s removed from WaitingForReturns in task %d", contact.ID.String(), commandID)
+			//log.Printf("Contact %s removed from WaitingForReturns in task %d", contact.ID.String(), commandID)
 			break
 		}
 	}
@@ -172,13 +171,13 @@ func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) 
 func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
-		log.Printf("Task with CommandID %d not found", commandID)
+		//log.Printf("Task with CommandID %d not found", commandID)
 		return
 	}
 
 	// Task is completed when no more waiting for returns
 	if len(task.WaitingForReturns) == 0 {
-		log.Printf("Task %d is completed", commandID)
+		//log.Printf("Task %d is completed", commandID)
 		// Optionally, you can remove the task from the task list here
 		kademlia.RemoveTask(commandID)
 	}
@@ -187,7 +186,7 @@ func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 // SortContactsByDistance sorts the contacts in the task's ClosestContacts based on their XOR distance to the TargetID.
 func (task *Task) SortContactsByDistance() {
 	if task.TargetID == nil {
-		log.Printf("Task %d has no TargetID, unable to sort contacts", task.CommandID)
+		//log.Printf("Task %d has no TargetID, unable to sort contacts", task.CommandID)
 		return
 	}
 
@@ -200,7 +199,7 @@ func (task *Task) SortContactsByDistance() {
 		return distanceToI.Less(distanceToJ)
 	})
 
-	log.Printf("(File: task, Function: SortContactsByDistance) Contacts in Task %d sorted by distance to TargetID", task.CommandID)
+	//log.Printf("(File: task, Function: SortContactsByDistance) Contacts in Task %d sorted by distance to TargetID", task.CommandID)
 }
 
 // RemoveTask removes a completed task by commandID
