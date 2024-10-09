@@ -2,6 +2,7 @@ package main
 
 import (
 	"d7024e/kademlia"
+
 	"fmt"
 	"time"
 )
@@ -39,6 +40,17 @@ func main() {
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode5.RoutingTable.GetMe())
 	KademliaNode5.RoutingTable.AddContact(*KademliaNode6.RoutingTable.GetMe())
+
+	KademliaNode6.RoutingTable.AddContact(*KademliaNode7.RoutingTable.GetMe())
+	KademliaNode6.RoutingTable.AddContact(*KademliaNode5.RoutingTable.GetMe())
+	KademliaNode7.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
+	KademliaNode7.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+	KademliaNode7.RoutingTable.AddContact(*KademliaNode8.RoutingTable.GetMe())
+	KademliaNode8.RoutingTable.AddContact(*KademliaNode11.RoutingTable.GetMe())
+	KademliaNode8.RoutingTable.AddContact(*KademliaNode9.RoutingTable.GetMe())
+	KademliaNode9.RoutingTable.AddContact(*KademliaNode10.RoutingTable.GetMe())
+	KademliaNode10.RoutingTable.AddContact(*KademliaNode11.RoutingTable.GetMe())
+
 	//KademliaNode1.UpdateRoutingTable(KademliaNode6.RoutingTable.GetMe())
 
 	// Step 1: Send a ping message from the second node to the first node
@@ -49,8 +61,9 @@ func main() {
 	time.Sleep(1 * time.Second)
 	
 	//node 1 is sending a lookupmesseage to node 2 to look up node 1, it then adds node 3, 4, and 5 to its routingtable
-
-	KademliaNode1.StartTask(KademliaNode6.RoutingTable.GetMe().ID, "LookupContact", "asd")
+	fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
+	hashedFile := kademlia.HashKademliaID(fileToStore)
+	KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 	time.Sleep(2 * time.Second)
 	// fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe()))
@@ -60,6 +73,8 @@ func main() {
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode6.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe()))
+	
+	//fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe()))
 
 	time.Sleep(2 * time.Second)
 

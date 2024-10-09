@@ -7,7 +7,7 @@ import (
 )
 
 // IDLength the static number of bytes in a KademliaID
-const IDLength = 10
+const IDLength = 20
 
 // KademliaID type definition of a KademliaID
 type KademliaID [IDLength]byte
@@ -33,7 +33,7 @@ func NewKademliaID(data string) *KademliaID {
 	decoded, _ := hex.DecodeString(data)
 	//fmt.Printf("newkademliaID runnin       ")
 	//fmt.Printf("Decoded bytes: %v\n", decoded) // Print the raw byte slice
-
+	//log.Printf("(File: kademliaid, Function: NewKademliaID) %d", IDLength)
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
 		newKademliaID[i] = decoded[i]

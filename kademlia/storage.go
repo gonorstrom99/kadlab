@@ -1,5 +1,9 @@
 package kademlia
 
+import(
+	// "log"
+)
+
 // Storage holds a map of KademliaID (hashes) to stored values.
 type Storage struct {
 	data map[KademliaID]string
@@ -15,7 +19,7 @@ func NewStorage() *Storage {
 // StoreValue stores a value associated with a given KademliaID.
 func (s *Storage) StoreValue(id KademliaID, value string) {
 	s.data[id] = value
-	println("(File: Storage, Function: StoreValue) Store value: %s Store id: %s", value, id.String())
+	// log.Printf("(File: Storage, Function: StoreValue) Store value: %s Store id: %s", value, id.String())
 }
 
 // GetValue retrieves a value associated with a given KademliaID.

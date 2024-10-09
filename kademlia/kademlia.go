@@ -63,12 +63,13 @@ func (kademlia *Kademlia) Start() {
 func (kademlia *Kademlia) StartTask(lookupTarget *KademliaID, commandType string, File string) {
 	//Ska inte ta en recipient utan vilka som ska skickas till räknas ut av routingtable i guess
 	commandID := NewCommandID()
+	log.Printf("(file: kademlia function: StartTask) Command id: %d ", commandID)
 	task := kademlia.CreateTask(commandType, commandID, lookupTarget)
+	task.File = File
 	kademlia.Tasks = append(kademlia.Tasks, *task)
 	///the task is also appended to the task list
 	task.ClosestContacts = kademlia.RoutingTable.FindClosestContacts(lookupTarget, bucketSize)
 	task.SortContactsByDistance()
-	task.File = File
 	// lägger till de 20 närmsta noderna till closestContacts och sortera
 
 	//skicka lookupmsg till de 3 närmsta och lägg till dessa 3 i ContactedNodes
@@ -135,7 +136,7 @@ func (kademlia *Kademlia) processMessages() {
 				kademlia.handleReturnFindValue(contact, msg)
 
 			case "StoreValue":
-				log.Printf("(File: Kademlia, function: processMessages) handling storevalue %s", msg.SenderAddress)
+				// log.Printf("(File: Kademlia, function: processMessages) handling storevalue %s", msg.SenderAddress)
 
 				kademlia.handleStoreValue(contact, msg)	
 
@@ -287,145 +288,119 @@ func (kademlia *Kademlia) handleLookupContact(contact *Contact, msg Message) {
 
 	// Send the response message back to the requesting contact
 	// The command for the response is 'returnLookupContact'
-
-	kademlia.Network.SendMessage(contact, fmt.Sprintf("return%s:%s:%s:%s", msg.Command, myID, msg.CommandID, responseMessage))
+	message := fmt.Sprintf("return%s:%s:%s:%s", msg.Command, myID, msg.CommandID, responseMessage)
+	kademlia.Network.SendMessage(contact, message)
+	log.Printf("%s", message)
+	
 	kademlia.updateRoutingTable(contact)
 
 	//log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookupContact to %s with contacts: %s", contact.Address, responseMessage)
 }
 
+
+
+
+
+
+
+
+
 // handleReturnLookupContact processes a "returnLookupContact" message
 func (kademlia *Kademlia) handleReturnLookupContact(contact *Contact, msg Message) {
-	//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Handling returnLookupContact from %s", contact.Address)
-	// Split the contact list by commas to get individual contact strings
 	contactStrings := strings.Split(msg.CommandInfo, ",")
 	commandID, err := strconv.Atoi(msg.CommandID)
-	senderID := NewKademliaID(msg.SenderID)
-	task, err := kademlia.FindTaskByCommandID(commandID)
-	// if(task == nil){
-	// 	panic("(File: kademlia: Function: HandleReturnLookupContact) task is nil")
-
-	// }
-	// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) at start of handlereturn...:%d",len(task.ClosestContacts))
-
-
-
-	// log.Printf("(File: kademlia: Function: HandleReturnLookupContact)  Task ID in the store value IF:%d",task.CommandID)
-
-	if len(contactStrings) == 0 {
-	} else {
-		for _, contactStr := range contactStrings {
-
-			// Split each contact string into ID and address using ":"
-
-			parts := strings.Split(contactStr, ":")
-			////log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(parts):", len(parts))
-			if len(parts) != 3 {
-				if parts[0] == "" {
-					//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) no more contacts recieved")
-					continue
-				} else {
-					//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Invalid contact format: %s", contactStr)
-					continue
-				}
-			}
-
-			// Create a new contact using the ID and the address
-			newContact := NewContact(NewKademliaID(parts[0]), parts[1]+":"+parts[2]) // parts[0] is the ID, parts[1] is the address
-
-			//log.Println("(File: kademlia: Function: StartLookupContact) newContact Address:", parts)
-
-			// Add the contact to the routing table
-			kademlia.updateRoutingTable(&newContact)
-			
-			////log.Printf(" AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-
-			if err != nil {
-				//log.Printf("Error in network listener: %v", err)
-			}
-			if task != nil {
-
-				if task.IsContactInClosestContacts(newContact) {
-				} else {
-					// log.Printf("contact is added to closest contacts")
-					task.ClosestContacts = append(task.ClosestContacts, newContact)
-					log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) after appending:%d",len(task.ClosestContacts))
-					// log.Printf("(File: kademlia: Function: HandleReturnLookupContact)  Task ID after appending:%d",task.CommandID)
-
-				}
-				task.SortContactsByDistance()
-
-				kademlia.RemoveContactFromWaitingForReturns(task.CommandID, *senderID)
-
-				
-			}
-		}
+	if err != nil {
+		log.Printf("Invalid command ID: %s", msg.CommandID)
+		return
 	}
-	// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(task.WaitingForReturns):%d",len(task.WaitingForReturns))
-	// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(task.ClosetContacts) before the if checking len==0   :%d",len(task.ClosestContacts))
 
-	// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) AreClosestContactsContacted:%b",task.AreClosestContactsContacted())
-	if task != nil {
-		if len(task.WaitingForReturns) == 0 && task.AreClosestContactsContacted() {
-				//If the task is a storevalue we send storevalue to the bucketsize closest contacts.
-				// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) In the if checking if len=0:%d",len(task.ClosestContacts))
-				if task.CommandType == "StoreValue" {
-					limit := bucketSize
-					// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) in the if checking commandtype=storevalue:%d",len(task.ClosestContacts))
-					// log.Printf("(File: kademlia: Function: HandleReturnLookupContact)  Task ID in the store value IF:%d",task.CommandID)
+	task, err := kademlia.FindTaskByCommandID(commandID)
+	if task == nil {
+		log.Printf("Task not found for CommandID: %d", commandID)
+		return
+	}
+	if err != nil {
+		log.Printf("error: %e", err)
+	}
 
-					if len(task.ClosestContacts) < bucketSize {
-						limit = len(task.ClosestContacts)
-					}
-					log.Printf("(File: kademlia: Function: HandleReturnLookupContact) limit: %d:", limit)
+	senderID := NewKademliaID(msg.SenderID)
+	kademlia.processReturnedContacts(task, contactStrings)
+	kademlia.RemoveContactFromWaitingForReturns(task.CommandID, *senderID)
 
-					for index := 0; index < limit; index++ {
-						log.Printf("(File: kademlia: Function: HandleReturnLookupContact) index, limit: %d:%d", index, limit)
-
-						log.Printf("(File: kademlia: Function: HandleReturnLookupContact) should send a message AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-
-						storeMessage := fmt.Sprintf("StoreValue:%s:%d:%s", kademlia.Network.ID.String(), commandID, task.File)
-						kademlia.Network.SendMessage(&task.ClosestContacts[index], storeMessage)
-					}
-
-				
-				// if task.type=storevalue{
-				// send storevalue to all in closestContacts}
-				//
-				//log.Printf("(File: kademlia: Function: HandleReturnLookupContact) in the if len(waiting=0 and then if(arefirstNodesIncontactedBuckets))")
-				}
-			
-
-		} else {
-			// //log.Printf("(File: kademlia: Function: HandleReturnLookupContact) in the else for (if len(waiting=0))"
-
-			index := task.FindFirstNotContactedNodeIndex()
-			// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) in the else after index:%d",len(task.ClosestContacts))
-
-			if index == -1{
-				// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) in the else if index=-1:%d",len(task.ClosestContacts))
-
-				//there is no uncontacted node
-			}else {
-				// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) in the else else:%d",len(task.ClosestContacts))
-
-				waitingContact := WaitingContact{
-					SentTime: time.Now(),                  // Set the current time as SentTime
-					Contact:  task.ClosestContacts[index], // Use the contact struct
-				}
-				task.WaitingForReturns = append(task.WaitingForReturns, waitingContact)
-		
-				lookupMessage := fmt.Sprintf("LookupContact:%s:%d:%s", kademlia.Network.ID.String(), commandID, task.TargetID)
-				// log.Printf("(File: kademlia: Function: HandleReturnLookupContact) len(closest.Contacts) in the else else after lookupmesseage is written:%d",len(task.ClosestContacts))
-
-				////log.Printf("(File: kademlia: Function: HandleReturnLookupContact) task.ClosestContacts[index].adress = %s", task.ClosestContacts[index].Address)
-				kademlia.Network.SendMessage(&task.ClosestContacts[index], lookupMessage)
-		
-				// kademlia.Network.SendMessage(&task.ClosestContacts[i], lookupMessage)
-			}
-		} 
+	if len(task.WaitingForReturns) == 0 && task.AreClosestContactsContacted() {
+		kademlia.handleTaskCompletion(task)
+	} else {
+		kademlia.sendNextLookup(task)
 	}
 }
+
+// processReturnedContacts processes each returned contact and updates the routing table and task.
+func (kademlia *Kademlia) processReturnedContacts(task *Task, contactStrings []string) {
+	for _, contactStr := range contactStrings {
+		parts := strings.Split(contactStr, ":")
+		if len(parts) != 3 || parts[0] == "" {
+			continue
+		}
+
+		newContact := NewContact(NewKademliaID(parts[0]), parts[1]+":"+parts[2])
+		kademlia.updateRoutingTable(&newContact)
+
+		if !task.IsContactInClosestContacts(newContact) {
+			task.ClosestContacts = append(task.ClosestContacts, newContact)
+			task.SortContactsByDistance()
+		}
+	}
+}
+
+// handleTaskCompletion handles the completion of a task.
+func (kademlia *Kademlia) handleTaskCompletion(task *Task) {
+	// log.Printf("(File: kademlia, Function: handleTaskCompletion) handleTastCompletion is running")
+	// log.Printf("(File: kademlia, Function: handleTaskCompletion) task.commandtype: %s", task.CommandType)
+
+	if task.CommandType == "StoreValue" {
+		limit := min(bucketSize, len(task.ClosestContacts))
+		for i := 0; i < limit; i++ {
+			
+			storeMessage := fmt.Sprintf("StoreValue:%s:%d:%s", kademlia.Network.ID.String(), task.CommandID, task.File)
+			kademlia.Network.SendMessage(&task.ClosestContacts[i], storeMessage)
+		}
+	}
+}
+
+// sendNextLookup sends the next lookup message to an uncontacted node, if available.
+func (kademlia *Kademlia) sendNextLookup(task *Task) {
+	index := task.FindFirstNotContactedNodeIndex()
+	if index == -1 {
+		return // No uncontacted nodes available
+	}
+
+	nextContact := task.ClosestContacts[index]
+
+	// Check if the contact has already been contacted
+	if task.ContactIsContacted(nextContact) {
+		log.Printf("Contact %s already contacted, skipping...", nextContact.Address)
+		return // Skip this contact if it has already been contacted
+	}
+
+	// Mark the contact as being waited for
+	waitingContact := WaitingContact{SentTime: time.Now(), Contact: nextContact}
+	task.WaitingForReturns = append(task.WaitingForReturns, waitingContact)
+	task.ContactedNodes = append(task.ContactedNodes, nextContact)
+
+	// Prepare and send the lookup message
+	lookupMessage := fmt.Sprintf("LookupContact:%s:%d:%s", kademlia.Network.ID.String(), task.CommandID, task.TargetID)
+	kademlia.Network.SendMessage(&nextContact, lookupMessage)
+}
+
+
+// min returns the smaller of two integers.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 
 // handleFindValue processes a "FindValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
@@ -442,15 +417,13 @@ func (kademlia *Kademlia) handleReturnFindValue(contact *Contact, msg Message) {
 // handleStoreValue processes a "StoreValue" message
 func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 	//log.Printf("(File: kademlia: Function: HandleStoreValue) Handling StoreValue from %s", contact.Address)
-
-	// Create a KademliaID using the CommandID (you can adjust this if needed)
-	kademliaID := NewKademliaID(msg.CommandID)
-
+	// log.Printf("(File: kademlia, Function: handleStoreValue) handlestorevalue is running: %s", msg.CommandInfo)
+	hashblabla := HashKademliaID(msg.CommandInfo)
 	// Extract the value to be stored from the CommandInfo field
 	value := msg.CommandInfo
 
 	// Store the value using the storage class
-	kademlia.Storage.StoreValue(*kademliaID, value)
+	kademlia.Storage.StoreValue(hashblabla, value)
 
 	// Log the successful storage operation
 	//log.Printf("Stored value for KademliaID %s: %s", kademliaID.String(), value)
@@ -469,6 +442,7 @@ func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) 
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue)")
 	}else{
 		kademlia.MarkTaskAsCompleted(task.CommandID)
+		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is storde!")
 	}
 }
 
