@@ -66,7 +66,7 @@ func TestIterativeLookupAndAdding(t *testing.T) {
 	KademliaNode10.RoutingTable.AddContact(*KademliaNode11.RoutingTable.GetMe())
 	//lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", KademliaNode1.Network.ID.String(), KademliaNode5.Network.ID.String())
 	//KademliaNode1.Network.SendMessage(KademliaNode3.RoutingTable.GetMe(), lookupMessage)
-	KademliaNode1.StartLookupContact(*KademliaNode11.RoutingTable.GetMe())
+	KademliaNode1.StartTask(KademliaNode11.RoutingTable.GetMe().ID, "LookupContact","asd")
 	time.Sleep(1 * time.Second)
 	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe())) {
 		t.Fatalf("(File: kademlia_test, Test: TestIterativeLookupAndAdding) the iterative part of lookup does not work")
@@ -96,7 +96,7 @@ func TestNetworkJoining(t *testing.T) {
 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
 
-	KademliaNode5.StartLookupContact(*KademliaNode5.RoutingTable.GetMe())
+	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact","asd")
 
 	time.Sleep(1 * time.Second)
 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe())) {
