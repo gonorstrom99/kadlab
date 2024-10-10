@@ -21,6 +21,10 @@ type Kademlia struct {
 	Storage      *Storage
 }
 
+func TestPrinter(printThis string) {
+	log.Printf(printThis)
+}
+
 // NewKademlia creates and initializes a new Kademlia node
 func NewKademlia(network *Network, routingTable *RoutingTable, taskList []Task, storage *Storage) *Kademlia {
 	return &Kademlia{
@@ -431,7 +435,7 @@ func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) 
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue)")
 	} else {
 		kademlia.MarkTaskAsCompleted(task.CommandID)
-		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is storde!")
+		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is stored!")
 	}
 }
 
