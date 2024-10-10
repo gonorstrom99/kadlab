@@ -30,7 +30,7 @@ func main() {
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 	KademliaNode2.RoutingTable.AddContact(*KademliaNode5.RoutingTable.GetMe())
 	KademliaNode5.RoutingTable.AddContact(*KademliaNode6.RoutingTable.GetMe())
-	KademliaNode1.UpdateRoutingTable(KademliaNode6.RoutingTable.GetMe())
+	KademliaNode1.StartLookupContact(*KademliaNode6.RoutingTable.GetMe())
 
 	// Step 1: Send a ping message from the second node to the first node
 	//fmt.Printf("Sending ping from second node to first node: %v\n", KademliaNode2.)
@@ -49,7 +49,7 @@ func main() {
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode3.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode4.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe()))
-	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode6.RoutingTable.GetMe()))
+	// fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode6.RoutingTable.GetMe()))
 
 	time.Sleep(2 * time.Second)
 

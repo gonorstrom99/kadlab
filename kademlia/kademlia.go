@@ -78,18 +78,13 @@ func (kademlia *Kademlia) StartLookupContact(lookupTarget Contact) {
 	kademlia.Tasks = append(kademlia.Tasks, *task)
 	///the task is also appended to the task list
 	task.ClosestContacts = kademlia.RoutingTable.FindClosestContacts(lookupTarget.ID, bucketSize)
-	for _, contact := range task.ClosestContacts {
-		log.Println("(File: kademlia: Function: StartLookupContact) Contact Address:", contact.Address)
-	}
+
 	task.SortContactsByDistance()
-	for _, contact := range task.ClosestContacts {
-		log.Println("(File: kademlia: Function: StartLookupContact) Contact Address:", contact.Address)
-	}
+
 	// lägger till de 20 närmsta noderna till closestContacts och sortera
 
 	//skicka lookupmsg till de 3 närmsta och lägg till dessa 3 i ContactedNodes
 	//och WaitingForReturns (med tiden msg skickades)
-	log.Printf("(File: Kademlia, function: StartLookupContact) senderID: =%s, targetID=%s", kademlia.RoutingTable.me.ID.String(), lookupTarget.ID.String())
 	limit := alpha
 	if len(task.ClosestContacts) < alpha {
 		limit = len(task.ClosestContacts)
@@ -297,6 +292,10 @@ func (kademlia *Kademlia) handleLookUpContact(contact *Contact, msg Message) {
 	log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookUpContact to %s with contacts: %s", contact.Address, responseMessage)
 }
 
+//func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Message) {
+
+// func process returned contacts
+// func nextLookupContact
 // handleReturnLookUpContact processes a "returnLookUpContact" message
 func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Message) {
 	log.Printf("(File: kademlia: Function: HandleReturnLookupContact) Handling returnLookUpContact from %s", contact.Address)
@@ -378,16 +377,7 @@ func (kademlia *Kademlia) handleReturnLookUpContact(contact *Contact, msg Messag
 			}
 		}
 	}
-	// Iterate over the contact strings to parse and add them to the routing table
 
-	//clear waitingforreturns of the contact that sent the returnlookupcontact and then send
-	//a new messeage with lookupcontact to the first node in closestComntacts that has not
-	//been sent to already.
-	//if all nodes in the closest 20 of contactedNodes has been contacted then terminate this.
-	//else
-	//		add the node you send to to contactedNodes.
-
-	// Optionally, log that the contacts have been added to the routing table
 }
 
 // handleFindValue processes a "findValue" message
