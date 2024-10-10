@@ -28,7 +28,7 @@ var pongList []ponged
 type Kademlia struct {
 	Network      *Network
 	RoutingTable *RoutingTable
-	// Tasks        []Task
+	Tasks        []Task
 }
 
 // NewKademlia creates and initializes a new Kademlia node
