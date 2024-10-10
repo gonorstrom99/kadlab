@@ -4,14 +4,14 @@ package kademlia
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
 	"time"
-	"log"
 )
 
-const alpha = 3 //the number of nodes to be contacted simultaneosly
+const alpha = 3  //the number of nodes to be contacted simultaneosly
 const TTL = 2000 // ms
 // Kademlia node
 type Kademlia struct {
@@ -138,7 +138,7 @@ func (kademlia *Kademlia) processMessages() {
 			case "StoreValue":
 				// log.Printf("(File: Kademlia, function: processMessages) handling storevalue %s", msg.SenderAddress)
 
-				kademlia.handleStoreValue(contact, msg)	
+				kademlia.handleStoreValue(contact, msg)
 
 			case "returnStoreValue":
 				kademlia.handleReturnStoreValue(contact, msg)
@@ -171,7 +171,6 @@ func (kademlia *Kademlia) checkTTLs() {
 					bucketIndex := kademlia.RoutingTable.getBucketIndex(task.TargetID)
 					bucket := kademlia.RoutingTable.buckets[bucketIndex]
 					bucket.AddContact(task.ReplaceContact)
-
 
 					//TODO
 					//uncomment below
@@ -291,19 +290,11 @@ func (kademlia *Kademlia) handleLookupContact(contact *Contact, msg Message) {
 	message := fmt.Sprintf("return%s:%s:%s:%s", msg.Command, myID, msg.CommandID, responseMessage)
 	kademlia.Network.SendMessage(contact, message)
 	log.Printf("%s", message)
-	
+
 	kademlia.updateRoutingTable(contact)
 
 	//log.Printf("(File: kademlia: Function: HandleLookupContact) Sent returnLookupContact to %s with contacts: %s", contact.Address, responseMessage)
 }
-
-
-
-
-
-
-
-
 
 // handleReturnLookupContact processes a "returnLookupContact" message
 func (kademlia *Kademlia) handleReturnLookupContact(contact *Contact, msg Message) {
@@ -360,7 +351,7 @@ func (kademlia *Kademlia) handleTaskCompletion(task *Task) {
 	if task.CommandType == "StoreValue" {
 		limit := min(bucketSize, len(task.ClosestContacts))
 		for i := 0; i < limit; i++ {
-			
+
 			storeMessage := fmt.Sprintf("StoreValue:%s:%d:%s", kademlia.Network.ID.String(), task.CommandID, task.File)
 			kademlia.Network.SendMessage(&task.ClosestContacts[i], storeMessage)
 		}
@@ -392,7 +383,6 @@ func (kademlia *Kademlia) sendNextLookup(task *Task) {
 	kademlia.Network.SendMessage(&nextContact, lookupMessage)
 }
 
-
 // min returns the smaller of two integers.
 func min(a, b int) int {
 	if a < b {
@@ -400,7 +390,6 @@ func min(a, b int) int {
 	}
 	return b
 }
-
 
 // handleFindValue processes a "FindValue" message
 func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
@@ -434,13 +423,13 @@ func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 // handleReturnStoreValue processes a "returnStoreValue" message
 func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) {
 	commandID, err := strconv.Atoi(msg.CommandID)
-	if(err != nil){
+	if err != nil {
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue error strconv )")
 	}
 	task, err := kademlia.FindTaskByCommandID(commandID)
-	if(err != nil){
+	if err != nil {
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue)")
-	}else{
+	} else {
 		kademlia.MarkTaskAsCompleted(task.CommandID)
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is storde!")
 	}
@@ -529,4 +518,3 @@ func (kademlia *Kademlia) FindTaskByCommandID(commandID int) (*Task, error) {
 	}
 	return nil, fmt.Errorf("task with CommandID %d not found", commandID)
 }
-
