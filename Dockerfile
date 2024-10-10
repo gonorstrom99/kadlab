@@ -1,3 +1,9 @@
+FROM archlinux:latest AS builder 
+WORKDIR /up 
+RUN pacman -Syu --noconfirm && pacman -S go gcc --noconfirm 
+COPY . ./
+RUN ./compile.sh
+
 FROM alpine:latest
 
 # Add the commands needed to put your compiled go binary in the container and
@@ -13,12 +19,16 @@ FROM alpine:latest
 # $ docker build . -t kadlab
 WORKDIR /app
 
+# TODO: kör funktion för korrekt tilldelande av port
+
 #fil måste vara kompilerad innan man kör
 # görs med
 # ./compile.sh
 # om error, kör först
 # sudo chmod +x ./compile.sh
-COPY d7024e ./d7024e
+
+
+COPY --from=builder /up/d7024e ./
 
 # sudo docker logs --follow [namn på nod]
 # skriver vi saker i nodens log bör detta isf skrivas ut i terminalen
