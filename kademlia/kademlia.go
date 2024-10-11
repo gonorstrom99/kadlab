@@ -472,7 +472,7 @@ func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 
 	// Log the successful storage operation
 	log.Printf("(File: kademlia: Function: handleStoreValue)Stored value for KademliaID %s: %s", hashblabla.String(), value)
-	message := fmt.Sprintf("returnStoreValue:%s:%s:%s", kademlia.Network.ID.String(), msg.CommandID, value)
+	message := fmt.Sprintf("returnStoreValue:%s:%s:%s", kademlia.Network.ID.String(), msg.CommandID, hashblabla.String())
 	kademlia.Network.SendMessage(contact, message)
 }
 
@@ -487,7 +487,10 @@ func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) 
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue) task not found")
 	} else {
 		task.NrNodesToStore++
-		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is storde!")
+
+		if task.NrNodesToStore == 1 {
+			log.Printf("(File: kademlia: Function: handleReturnStoreValue) Hash: %s", msg.CommandInfo)
+		}
 		if task.NrNodesToStore == 10 {
 			kademlia.MarkTaskAsCompleted(task.CommandID)
 			log.Printf("(File: kademlia: Function: handleReturnStoreValue) 10 nodes storde the value")

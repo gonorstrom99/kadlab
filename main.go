@@ -3,6 +3,7 @@ package main
 import (
 	"d7024e/kademlia"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -62,6 +63,7 @@ func main() {
 	//node 1 is sending a lookupmesseage to node 2 to look up node 1, it then adds node 3, 4, and 5 to its routingtable
 	fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
 	hashedFile := kademlia.HashKademliaID(fileToStore)
+	log.Printf("(File: main: Function: main)hash value %s:accual value %s", hashedFile.String(), fileToStore)
 	KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
 
