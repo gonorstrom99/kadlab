@@ -471,7 +471,7 @@ func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 	kademlia.Storage.StoreValue(hashblabla, value)
 
 	// Log the successful storage operation
-	log.Printf("(File: kademlia: Function: handleStoreValue)Stored value for KademliaID %s: %s", hashblabla.String(), value)
+	//log.Printf("(File: kademlia: Function: handleStoreValue)Stored value for KademliaID %s: %s", hashblabla.String(), value)
 	message := fmt.Sprintf("returnStoreValue:%s:%s:%s", kademlia.Network.ID.String(), msg.CommandID, hashblabla.String())
 	kademlia.Network.SendMessage(contact, message)
 }
