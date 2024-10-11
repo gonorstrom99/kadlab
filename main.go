@@ -2,7 +2,6 @@ package main
 
 import (
 	"d7024e/kademlia"
-
 	"fmt"
 	"time"
 )
@@ -59,12 +58,14 @@ func main() {
 
 	// Step 2: Wait and give time for the ping-pong interaction to complete
 	time.Sleep(1 * time.Second)
-	
+
 	//node 1 is sending a lookupmesseage to node 2 to look up node 1, it then adds node 3, 4, and 5 to its routingtable
 	fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
 	hashedFile := kademlia.HashKademliaID(fileToStore)
 	KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
 	// Step 4: Wait for lookUpContact to be processed and returnLookUpContact to be sent
+
+	KademliaNode1.StartTask(&KademliaNode1.Network.ID, "LookupContact", "")
 	time.Sleep(2 * time.Second)
 	// fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe()))
 
@@ -73,9 +74,39 @@ func main() {
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode6.RoutingTable.GetMe()))
 	fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe()))
-	
+
 	//fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe()))
+
+	time.Sleep(8 * time.Second)
+
+	KademliaNode1.StartTask(&hashedFile, "FindValue", "")
 
 	time.Sleep(2 * time.Second)
 
 }
+
+/*
+// Create a slice to hold the Kademlia nodes
+	var kademliaNodes []*kademlia.Kademlia
+
+	// Create and start 50 Kademlia nodes
+	for i := 1; i <= 50; i++ {
+		address := fmt.Sprintf("127.0.0.1:%d", 8000+i)
+		node := kademlia.CreateKademliaNode(address)
+		kademliaNodes = append(kademliaNodes, node)
+		node.Start()
+		fmt.Printf("Kademlia Node %d started at %s\n", i, address)
+	}
+
+	// Give some time for the nodes to start listening and processing messages
+	time.Sleep(1 * time.Second)
+
+	// Example: Add some contacts to the first node's routing table for testing
+	for i := 1; i < 50; i++ {
+		kademliaNodes[1].RoutingTable.AddContact(*kademliaNodes[i].RoutingTable.GetMe())
+		kademliaNodes[i].RoutingTable.AddContact(*kademliaNodes[1].RoutingTable.GetMe())
+	}
+	for i := 1; i < 50; i++ {
+		kademliaNodes[i].StartTask(&kademliaNodes[i].Network.ID, "LookupContact", "")
+	}
+*/

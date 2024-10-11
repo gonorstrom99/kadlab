@@ -25,6 +25,7 @@ type Task struct {
 	WaitingForReturns []WaitingContact // Alpha number of nodes that we're waiting for returns from
 	ReplaceContact    Contact          // Contact to replace if no pong was recived
 	File              string           //file/string that is to be stored
+	NrNodesToStore    int              // NUmber of nodes that should store a value (bucket size)
 }
 
 // UpdateTaskFromMessage takes a Message struct and a contact, parses the information,
@@ -98,8 +99,7 @@ func (task *Task) AreClosestContactsContacted() bool {
 	return true
 }
 
-func (kademlia *Kademlia) CreateTask(Command string, commandID int, targetID *KademliaID) *Task {
-	commandType := Command
+func (kademlia *Kademlia) CreateTask(commandType string, commandID int, targetID *KademliaID) *Task {
 
 	task := Task{
 		CommandType:       commandType,
@@ -177,8 +177,9 @@ func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 
 	// Task is completed when no more waiting for returns
 	if len(task.WaitingForReturns) == 0 {
-		//log.Printf("Task %d is completed", commandID)
-		// Optionally, you can remove the task from the task list here
+		if task.CommandType == "StoreValue" {
+
+		}
 		kademlia.RemoveTask(commandID)
 	}
 }
