@@ -1,15 +1,19 @@
 package main
 
+//$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+// entrypointnode docker run -it  --network host -e ID=container1 -e ADDRESS=127.0.0.1:8001 kadlab
+// other nodes "docker run -it  --network host -e ID=container2 -e ADDRESS=127.0.0.1:8002 kadlab", 8002 to 8051 i  suppose
+
 import (
 	// "d7024e/kademlia"
 
 	"bufio"
 	"kadlab/kademlia"
+	"time"
 
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"fmt"
 )
@@ -25,30 +29,26 @@ func main() {
 	fmt.Println("Docker node is running. Type 'put' followed by your command:")
 	id := os.Getenv("ID")
 	address := os.Getenv("ADDRESS")
-	kademlia.TestPrinter("aaaaaaaaaaaaaa")
-	//kademlia.TestPrinter(address)
+	KademliaNode1 := kademlia.CreateKademliaNode(address)
+	KademliaNode1.Start()
+	time.Sleep(1 * time.Second)
 
-	// KademliaNode1 := kademlia.CreateKademliaNode(address)
-	// log.Printf(KademliaNode1.RoutingTable.GetMe().Address)
-	// KademliaNode1.Start()
-	// if address == "127.0.0.1:8001" {
-	// 		KademliaNode1.Network.ID = *kademlia.NewKademliaID("Node1")
-	// }
+	if address == "127.0.0.1:8001" {
+		// KademliaNode1.Network.ID = *kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+		log.Printf("in the if %s", KademliaNode1.RoutingTable.GetMe().Address)
+		// KademliaNode1.Network.SendMessageWithAddress(address, "ping")
+		// KademliaNode1.Network.SendMessageWithAddress(address, "ping:"+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:"+":ping")
 
-	// if address == "127.0.0.1:8002" {
-	// 	contact := kademlia.NewContact(kademlia.NewKademliaID("Node1"), "127.0.0.1:8001")
+	} else {
+		contact := kademlia.NewContact(kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), "127.0.0.1:8001")
+		KademliaNode1.RoutingTable.AddContact(contact)
+		KademliaNode1.StartTask(&KademliaNode1.Network.ID, "LookupContact", "")
+	}
 
-	// 	KademliaNode1.RoutingTable.AddContact(contact)
-
-	// 	KademliaNode1.StartTask(contact.ID, "LookupContact", "---")
-
-	// }
-	// Call the create function with the provided values.
 	create(id, address)
 	// Create a new scanner to read input from stdin.
 	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print("> ")
-	log.Printf(address)
+
 	for {
 		fmt.Print("> ")
 		if scanner.Scan() {
@@ -57,8 +57,17 @@ func main() {
 			// Check if the input starts with the "put" command.
 			if strings.HasPrefix(input, "put") {
 				// Execute the command or handle the "put" command.
-				log.Printf(id)
-				startprogram(input)
+				// contact := kademlia.NewContact(kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), "127.0.0.1:8001")
+				// KademliaNode1.RoutingTable.AddContact(contact)
+				fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
+				hashedFile := kademlia.HashKademliaID(fileToStore)
+				KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
+
+			} else if strings.HasPrefix(input, "show") {
+				fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
+				hashedFile := kademlia.HashKademliaID(fileToStore)
+				value, found := KademliaNode1.Storage.GetValue(hashedFile)
+				log.Printf("value found? %s%b", value, found)
 			} else if strings.HasPrefix(input, "exit") {
 				break
 			} else {
@@ -69,15 +78,6 @@ func main() {
 			break
 		}
 	}
-
-	// KademliaNode1 := kademlia.CreateKademliaNode("127.0.0.1:8001")
-	// //KademliaNode1 := kademlia.CreateKademliaNode("127.0.0.1:portfromdocker")
-	// //if kademlia.port == 8001 {
-	// //kademlia.id="newkademliaID(AAAAAAA)"
-	// //}else {
-	// //	lookup på sig själv till (AAAAAAA, 127.0.0.1:8001) node}
-	// //
-	// //
 
 	// KademliaNode2 := kademlia.CreateKademliaNode("127.0.0.1:8002")
 	// KademliaNode3 := kademlia.CreateKademliaNode("127.0.0.1:8003")
@@ -145,6 +145,6 @@ func main() {
 
 	// //fmt.Println("(file: main) Value of iscontactinroutiongtable:", KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe()))
 
-	time.Sleep(2 * time.Second)
+	//time.Sleep(2 * time.Second)
 
 }

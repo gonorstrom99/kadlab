@@ -37,7 +37,12 @@ func NewKademlia(network *Network, routingTable *RoutingTable, taskList []Task, 
 
 // CreateKademliaNode make a new kademlia node
 func CreateKademliaNode(address string) *Kademlia {
+
 	ID := NewRandomKademliaID()
+	if address == "127.0.0.1:8001" {
+		log.Printf("changing kademliaID")
+		ID = NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+	}
 	contact := NewContact(ID, address)
 	routingTable := NewRoutingTable(contact)
 	messageCh := make(chan Message)
@@ -116,11 +121,13 @@ func (kademlia *Kademlia) processMessages() {
 				ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
 				Address: msg.SenderAddress,           // The sender's IP and port
 			}
-
+			// log.Print(msg)
 			// Handle different message types based on the "Command" field
 			switch msg.Command {
 			case "ping":
 				// Respond with "pong" to a ping message
+				log.Printf("Received ping from %s", msg.SenderAddress)
+
 				kademlia.handlePing(contact, msg)
 
 			case "pong":
@@ -154,6 +161,7 @@ func (kademlia *Kademlia) processMessages() {
 
 		case <-time.After(TTL * time.Millisecond): // If no message is received after 100 ms
 			// Perform some other action when no messages are received
+			// log.Print("case after")
 			kademlia.checkTTLs()
 		}
 	}

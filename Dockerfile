@@ -40,8 +40,8 @@ COPY . .
 RUN go build -o kadlab
 
 # Use a smaller image for the final stage to keep the image size down
-FROM alpine:latest
-
+# FROM alpine:latest
+FROM golang:1.20
 # Set the working directory inside the container
 WORKDIR /app
 

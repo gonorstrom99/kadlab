@@ -71,7 +71,9 @@ func (network *Network) Listen(contact Contact) error {
 		// 	log.Printf("Invalid message format received from %s: %s", contactAddress, message)
 		// 	continue
 		// }
-
+		for _, i := range parts {
+			log.Printf("printing part of parts %s:  ", i)
+		}
 		// Extract the message parts
 		command := parts[0]
 		senderID := parts[1]
@@ -94,6 +96,8 @@ func (network *Network) Listen(contact Contact) error {
 // The message string is the final message to be sent, already formatted.
 func (network *Network) SendMessage(contact *Contact, message string) {
 	// Resolve the contact's address (expected to be in "IP:Port" format)
+	log.Printf("Network: sendmessage")
+	log.Printf("messegeString: %s", message)
 	addr, err := net.ResolveUDPAddr("udp", contact.Address)
 	if err != nil {
 		log.Printf("Error resolving UDP address: %v", err)
@@ -104,6 +108,24 @@ func (network *Network) SendMessage(contact *Contact, message string) {
 	_, err = network.Conn.WriteToUDP([]byte(message), addr)
 	if err != nil {
 		log.Printf("Error sending message to %s: %v", contact.Address, err)
+		return
+	}
+
+	//log.Printf("Network sent message '%s' to %s", message, contact.Address)
+}
+func (network *Network) SendMessageWithAddress(Address string, message string) {
+	log.Printf("Network: sendmessagewithAddress")
+
+	addr, err := net.ResolveUDPAddr("udp", Address)
+	if err != nil {
+		log.Printf("Error resolving UDP address: %v", err)
+		return
+	}
+
+	// Use the existing UDP connection to send the message
+	_, err = network.Conn.WriteToUDP([]byte(message), addr)
+	if err != nil {
+		log.Printf("Error sending message to %s: %v", Address, err)
 		return
 	}
 
