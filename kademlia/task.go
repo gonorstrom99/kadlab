@@ -3,6 +3,7 @@ package kademlia
 // en test kommentar
 
 import (
+	"log"
 	"sort"
 	"strconv"
 	"time"
@@ -118,6 +119,17 @@ func (kademlia *Kademlia) CreateTask(commandType string, commandID int, targetID
 	// Add the task to the node's task list (assuming you have a task list)
 	return &task
 }
+func (task *Task) RemoveContactFromWaitingForReturnsByTask(contactID KademliaID) {
+	// Remove contact from WaitingForReturns
+	for i, waitingContact := range task.WaitingForReturns {
+		if waitingContact.Contact.ID.Equals(&contactID) {
+			// Remove the contact from the list
+			task.WaitingForReturns = append(task.WaitingForReturns[:i], task.WaitingForReturns[i+1:]...)
+			//log.Printf("Contact %s removed from WaitingForReturns in task %d", contactID.String(), commandID)
+			break
+		}
+	}
+}
 
 // RemoveContactFromTask removes a contact from the WaitingForReturns list when they respond
 func (kademlia *Kademlia) RemoveContactFromWaitingForReturns(commandID int, contactID KademliaID) {
@@ -172,14 +184,29 @@ func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) 
 func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
-		//log.Printf("Task with CommandID %d not found", commandID)
+		log.Printf("Task with CommandID %d not found", commandID)
 		return
 	}
 
 	// Task is completed when no more waiting for returns
 	if len(task.WaitingForReturns) == 0 {
-		kademlia.RemoveTask(commandID)
+		if task.CommandType == "StoreValue" {
+			// kademlia.handleTaskCompletion(task)
+		}
 	}
+	kademlia.RemoveTask(commandID)
+
+}
+func (kademlia *Kademlia) RemoveTask(commandID int) {
+	var remainingTasks []Task
+	for _, task := range kademlia.Tasks {
+		if task.CommandID != commandID {
+			remainingTasks = append(remainingTasks, task)
+
+		}
+	}
+	kademlia.Tasks = remainingTasks
+
 }
 
 // SortContactsByDistance sorts the contacts in the task's ClosestContacts based on their XOR distance to the TargetID.
@@ -202,17 +229,6 @@ func (task *Task) SortContactsByDistance() {
 }
 
 // RemoveTask removes a completed task by commandID
-func (kademlia *Kademlia) RemoveTask(commandID int) {
-	var remainingTasks []Task
-	for _, task := range kademlia.Tasks {
-		if task.CommandID != commandID {
-			remainingTasks = append(remainingTasks, task)
-
-		}
-	}
-	kademlia.Tasks = remainingTasks
-
-}
 
 // HasTaskTimedOut checks whether a task has timed out based on a given duration.
 func (task *Task) HasTaskTimedOut(timeout time.Duration) bool {

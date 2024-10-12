@@ -1,3 +1,3 @@
-module d7024e
+module kadlab
 
-go 1.22.1
+go 1.20

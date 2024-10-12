@@ -66,7 +66,7 @@ func TestIterativeLookupAndAdding(t *testing.T) {
 	KademliaNode10.RoutingTable.AddContact(*KademliaNode11.RoutingTable.GetMe())
 	//lookupMessage := fmt.Sprintf("lookUpContact:%s:%s", KademliaNode1.Network.ID.String(), KademliaNode5.Network.ID.String())
 	//KademliaNode1.Network.SendMessage(KademliaNode3.RoutingTable.GetMe(), lookupMessage)
-	KademliaNode1.StartTask(KademliaNode11.RoutingTable.GetMe().ID, "LookupContact","asd")
+	KademliaNode1.StartTask(KademliaNode11.RoutingTable.GetMe().ID, "LookupContact", "asd")
 	time.Sleep(1 * time.Second)
 	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode11.RoutingTable.GetMe())) {
 		t.Fatalf("(File: kademlia_test, Test: TestIterativeLookupAndAdding) the iterative part of lookup does not work")
@@ -96,7 +96,45 @@ func TestNetworkJoining(t *testing.T) {
 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
 
-	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact","asd")
+	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
+
+	time.Sleep(1 * time.Second)
+	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe())) {
+		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+	}
+	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode3.RoutingTable.GetMe())) {
+		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+	}
+	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode4.RoutingTable.GetMe())) {
+		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+	}
+	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe())) {
+		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+	}
+
+}
+
+func TestFullBucket(t *testing.T) {
+
+	KademliaNode1 := CreateKademliaNode("127.0.0.1:8000")
+	KademliaNode2 := CreateKademliaNode("127.0.0.1:8001")
+	KademliaNode3 := CreateKademliaNode("127.0.0.1:8002")
+	KademliaNode4 := CreateKademliaNode("127.0.0.1:8003")
+	KademliaNode5 := CreateKademliaNode("127.0.0.1:8004")
+	time.Sleep(1 * time.Second)
+	KademliaNode1.Start()
+	KademliaNode2.Start()
+	KademliaNode3.Start()
+	KademliaNode4.Start()
+	KademliaNode5.Start()
+	time.Sleep(1 * time.Second)
+
+	KademliaNode1.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+	KademliaNode1.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
+	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
+	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
+
+	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
 
 	time.Sleep(1 * time.Second)
 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe())) {
