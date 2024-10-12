@@ -72,7 +72,7 @@ func (kademlia *Kademlia) Start() {
 func (kademlia *Kademlia) StartTask(lookupTarget *KademliaID, commandType string, File string) {
 	//Ska inte ta en recipient utan vilka som ska skickas till räknas ut av routingtable i guess
 	commandID := NewCommandID()
-	log.Printf("(file: kademlia function: StartTask) Command id: %d ", commandID)
+	// log.Printf("(file: kademlia function: StartTask) Command id: %d ", commandID)
 	task := kademlia.CreateTask(commandType, commandID, lookupTarget)
 	task.File = File
 	kademlia.Tasks = append(kademlia.Tasks, *task)
@@ -118,7 +118,7 @@ func (kademlia *Kademlia) processMessages() {
 
 			// // Create a contact using the sender's ID and address
 			// log.Printf("msg.SenderID: %s", msg.SenderID)
-			log.Printf(msg.Command + ":" + msg.CommandInfo + ":" + msg.CommandID + ":" + msg.SenderID + ":" + msg.SenderAddress)
+			// log.Printf(msg.Command + ":" + msg.CommandInfo + ":" + msg.CommandID + ":" + msg.SenderID + ":" + msg.SenderAddress)
 			contact := &Contact{
 				ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
 				Address: msg.SenderAddress,           // The sender's IP and port
@@ -322,7 +322,7 @@ func (kademlia *Kademlia) handleReturnLookupContact(contact *Contact, msg Messag
 
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if task == nil {
-		log.Printf("Task not found for CommandID: %d", commandID)
+		// log.Printf("Task not found for CommandID: %d", commandID)
 		return
 	}
 	if err != nil {
@@ -522,14 +522,6 @@ func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) 
 		}
 
 	}
-}
-
-func (kademlia *Kademlia) LookupData(hash string) {
-	// TODO
-}
-
-func (kademlia *Kademlia) Store(data []byte) {
-	// TODO
 }
 
 // func (kademlia *Kademlia) UpdateRoutingTable(newContact *Contact) {
