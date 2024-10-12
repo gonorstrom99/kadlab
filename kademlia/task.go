@@ -102,6 +102,7 @@ func (task *Task) AreClosestContactsContacted() bool {
 
 func (kademlia *Kademlia) CreateTask(commandType string, commandID int, targetID *KademliaID) *Task {
 
+	//log.Printf("(File: task: Function: CreateTask)hash value %s: and commandType: %s", targetID, commandType)
 	task := Task{
 		CommandType:       commandType,
 		CommandID:         commandID,
