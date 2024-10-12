@@ -32,7 +32,7 @@ for /l %%i in (1,1,%NUM_CONTAINERS%) do (
     echo Starting !ID! on port !PORT!
     
     @REM docker run -d -it --network host -e ADDRESS=127.0.0.1:!PORT! kadlab
-    docker run -d -it --name !NAME! --network host -e ID=!NAME! -e ADDRESS=127.0.0.1:!PORT! kadlab
+    docker run -d -it --rm --name !NAME! --network host -e ID=!NAME! -e ADDRESS=127.0.0.1:!PORT! kadlab
     @REM timeout /t 1 /nobreak >nul
 
 )
