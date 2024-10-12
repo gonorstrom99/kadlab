@@ -24,6 +24,7 @@ func main() {
 	KademliaNode1 := kademlia.CreateKademliaNode(address)
 	KademliaNode1.Start()
 	time.Sleep(1 * time.Second)
+	log.Printf("my address is: %s", KademliaNode1.RoutingTable.GetMe().Address)
 
 	if address == "127.0.0.1:8001" {
 		// KademliaNode1.Network.ID = *kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")

@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-const alpha = 3  //the number of nodes to be contacted simultaneosly
-const TTL = 2000 // ms
+const alpha = 3 //the number of nodes to be contacted simultaneosly
+const TTL = 200 // ms
 // Kademlia node
 type Kademlia struct {
 	Network      *Network
@@ -115,7 +115,9 @@ func (kademlia *Kademlia) processMessages() {
 		case msg := <-kademlia.Network.MessageCh: // If there's a message in the channel
 			//log.Printf("(File: kademlia: Function: processMessages) processing message: '%s' from %s with nodeID: %s and commandID: %s", msg.Command, msg.SenderAddress, msg.SenderID, msg.CommandID)
 
-			// Create a contact using the sender's ID and address
+			// // Create a contact using the sender's ID and address
+			// log.Printf("msg.SenderID: %s", msg.SenderID)
+			log.Printf(msg.Command + ":" + msg.CommandInfo + ":" + msg.CommandID + ":" + msg.SenderID + ":" + msg.SenderAddress)
 			contact := &Contact{
 				ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
 				Address: msg.SenderAddress,           // The sender's IP and port
@@ -178,6 +180,7 @@ func (kademlia *Kademlia) checkTTLs() {
 			if time.Since(waitingContact.SentTime) > ttl {
 				// Contact has timed out, remove it from WaitingForReturns
 				//log.Printf("Contact %s in task %d has timed out", waitingContact.Contact.ID.String(), task.CommandID)
+				task.RemoveContactFromWaitingForReturnsByTask(*waitingContact.Contact.ID)
 				if task.CommandType == "ping" {
 					bucketIndex := kademlia.RoutingTable.getBucketIndex(task.TargetID)
 					bucket := kademlia.RoutingTable.buckets[bucketIndex]
@@ -190,15 +193,15 @@ func (kademlia *Kademlia) checkTTLs() {
 				for _, closestContact := range task.ClosestContacts {
 					if !kademlia.isContactInList(task.ContactedNodes, closestContact) {
 						// Send a new lookup to this uncontacted node
-						lookupMessage := fmt.Sprintf("LookupContact:%s:%d:%s", kademlia.RoutingTable.me.ID.String(), task.CommandID, task.TargetID.String())
-						kademlia.Network.SendMessage(&closestContact, lookupMessage)
-
-						// Mark this contact as contacted and add it to WaitingForReturns
 						task.ContactedNodes = append(task.ContactedNodes, closestContact)
 						task.WaitingForReturns = append(task.WaitingForReturns, WaitingContact{
 							SentTime: time.Now(),
 							Contact:  closestContact,
 						})
+						lookupMessage := fmt.Sprintf("LookupContact:%s:%d:%s", kademlia.RoutingTable.me.ID.String(), task.CommandID, task.TargetID.String())
+						kademlia.Network.SendMessage(&closestContact, lookupMessage)
+
+						// Mark this contact as contacted and add it to WaitingForReturns
 
 						//log.Printf("Sent LookupContact to %s", closestContact.Address)
 						break // Stop looking for the next contact once one is found
@@ -214,8 +217,14 @@ func (kademlia *Kademlia) checkTTLs() {
 		task.WaitingForReturns = updatedWaitingForReturns
 
 		// Optionally, you could check if the task is now complete and remove it
-		if len(task.WaitingForReturns) == 0 {
+		if len(task.WaitingForReturns) == 0 && task.AreClosestContactsContacted() {
+
+			log.Printf("doing marktaskascompleted on the row below")
+			kademlia.handleTaskCompletion(&task)
+			log.Printf("%d", task.CommandID)
+
 			kademlia.MarkTaskAsCompleted(task.CommandID)
+
 		}
 	}
 }
@@ -238,7 +247,7 @@ func (kademlia *Kademlia) handlePing(contact *Contact, msg Message) {
 	// The format will be "pong:<senderID>:<senderAddress>:pong"
 	id := kademlia.RoutingTable.me.ID.String()
 
-	pongMessage := fmt.Sprintf("pong:%s:%s:pong", msg.CommandID, id)
+	pongMessage := fmt.Sprintf("pong:%s:%s:pong", id, msg.CommandID)
 
 	// Send the pong message back to the contact
 	kademlia.Network.SendMessage(contact, pongMessage)
@@ -504,9 +513,9 @@ func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) 
 		if task.NrNodesToStore == 1 {
 			log.Printf("(File: kademlia: Function: handleReturnStoreValue) Hash: %s", msg.CommandInfo)
 		}
-		if task.NrNodesToStore == 10 {
+		if task.NrNodesToStore == bucketSize {
 			kademlia.MarkTaskAsCompleted(task.CommandID)
-			log.Printf("(File: kademlia: Function: handleReturnStoreValue) 10 nodes storde the value")
+			log.Printf("(File: kademlia: Function: handleReturnStoreValue) bucketsize nodes has stored the value")
 		}
 
 	}
@@ -544,8 +553,8 @@ func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 		// Ping the oldest contact if the bucket is full
 		oldestElement := bucket.list.Back()
 		if oldestElement != nil {
-			oldContact := oldestElement.Value.(*Contact)
-			kademlia.CheckContactStatus(oldContact, newContact)
+			oldContact := oldestElement.Value.(Contact)
+			kademlia.CheckContactStatus(&oldContact, newContact)
 		}
 	} else {
 		// Add the new contact since the bucket isn't full
