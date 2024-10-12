@@ -362,6 +362,7 @@ func (kademlia *Kademlia) handleTaskCompletion(task *Task) {
 
 	if task.CommandType == "StoreValue" {
 		limit := min(bucketSize, len(task.ClosestContacts))
+		log.Printf("value is stored now %s: ", task.TargetID.String())
 		for i := 0; i < limit; i++ {
 
 			storeMessage := fmt.Sprintf("StoreValue:%s:%d:%s", kademlia.Network.ID.String(), task.CommandID, task.File)
@@ -435,15 +436,16 @@ func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 // handleReturnStoreValue processes a "returnStoreValue" message
 func (kademlia *Kademlia) handleReturnStoreValue(contact *Contact, msg Message) {
 	commandID, err := strconv.Atoi(msg.CommandID)
+	log.Printf("value stored")
 	if err != nil {
 		log.Printf("(File: kademlia: Function: handleReturnStoreValue error strconv )")
 	}
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
-		log.Printf("(File: kademlia: Function: handleReturnStoreValue)")
+		log.Printf("(File: kademlia: Function: handleReturnStoreValue) %e", err)
 	} else {
 		kademlia.MarkTaskAsCompleted(task.CommandID)
-		log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is stored!")
+		// log.Printf("(File: kademlia: Function: handleReturnStoreValue) Value is stored!")
 	}
 }
 

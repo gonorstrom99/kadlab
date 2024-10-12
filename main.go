@@ -18,16 +18,8 @@ import (
 	"fmt"
 )
 
-func startprogram(ID string) {
-	log.Printf("asd")
-}
-func create(ID string, Address string) {
-	log.Printf("Creating with ID: %s, Address: %s\n", ID, Address)
-}
-
 func main() {
 	fmt.Println("Docker node is running. Type 'put' followed by your command:")
-	id := os.Getenv("ID")
 	address := os.Getenv("ADDRESS")
 	KademliaNode1 := kademlia.CreateKademliaNode(address)
 	KademliaNode1.Start()
@@ -45,7 +37,6 @@ func main() {
 		KademliaNode1.StartTask(&KademliaNode1.Network.ID, "LookupContact", "")
 	}
 
-	create(id, address)
 	// Create a new scanner to read input from stdin.
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -54,24 +45,37 @@ func main() {
 		if scanner.Scan() {
 			// Read the input and trim any extra spaces.
 			input := strings.TrimSpace(scanner.Text())
-			// Check if the input starts with the "put" command.
-			if strings.HasPrefix(input, "put") {
-				// Execute the command or handle the "put" command.
-				// contact := kademlia.NewContact(kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), "127.0.0.1:8001")
-				// KademliaNode1.RoutingTable.AddContact(contact)
-				fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
-				hashedFile := kademlia.HashKademliaID(fileToStore)
-				KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
 
-			} else if strings.HasPrefix(input, "show") {
-				fileToStore := "gustav e bonk, honing is bonking. Messa with the honk and you get the bonkTHIS IS A STORED FILE HOPEFULLY"
-				hashedFile := kademlia.HashKademliaID(fileToStore)
-				value, found := KademliaNode1.Storage.GetValue(hashedFile)
-				log.Printf("value found? %s%b", value, found)
+			// Split the input into words.
+			parts := strings.Fields(input)
+
+			// Ensure that we have exactly two parts.
+			if len(parts) == 2 {
+				command := parts[0]
+				argument := parts[1]
+
+				// Check if the input starts with the "put" command.
+				if command == "put" {
+					// Execute the command or handle the "put" command.
+					// contact := kademlia.NewContact(kademlia.NewKademliaID("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"), "127.0.0.1:8001")
+					// KademliaNode1.RoutingTable.AddContact(contact)
+					fileToStore := argument
+					hashedFile := kademlia.HashKademliaID(fileToStore)
+					KademliaNode1.StartTask(&hashedFile, "StoreValue", fileToStore)
+
+				} else if command == "show" {
+					fileToShow := argument
+					hashedFile := kademlia.HashKademliaID(fileToShow)
+					value, found := KademliaNode1.Storage.GetValue(hashedFile)
+					log.Printf("value found? %s%b", value, found)
+				} else {
+					fmt.Println("Unknown command. Type command followed by an argument.")
+				}
 			} else if strings.HasPrefix(input, "exit") {
 				break
 			} else {
-				fmt.Println("Unknown command. Type 'put' followed by a command.")
+				fmt.Println("Unknown command. Type command followed by an argument.")
+
 			}
 		} else {
 			// If there's an error or EOF, break the loop.
