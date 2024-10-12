@@ -83,7 +83,7 @@ func main() {
 
 	KademliaNode1.StartTask(&hashedFile, "FindValue", "")
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(4 * time.Second)
 
 }
 

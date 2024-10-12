@@ -89,6 +89,7 @@ func (kademlia *Kademlia) StartTask(lookupTarget *KademliaID, commandType string
 		task.WaitingForReturns = append(task.WaitingForReturns, waitingContact)
 		task.ContactedNodes = append(task.ContactedNodes, task.ClosestContacts[i])
 
+		//log.Printf("(file: kademlia function: StartTask) sending message %s:%s:%d:%s", commandType, kademlia.Network.ID.String(), commandID, lookupTarget.String())
 		Message := fmt.Sprintf("%s:%s:%d:%s", commandType, kademlia.Network.ID.String(), commandID, lookupTarget.String())
 		kademlia.Network.SendMessage(&task.ClosestContacts[i], Message)
 
@@ -350,7 +351,7 @@ func (kademlia *Kademlia) handleTaskCompletion(task *Task) {
 			kademlia.Network.SendMessage(&task.ClosestContacts[i], storeMessage)
 		}
 	} else if task.CommandType == "FindValue" {
-		log.Printf("(file: kademlia function: handleTaskCompletion) file not found: %s", task.File)
+		log.Printf("(file: kademlia function: handleTaskCompletion) file not found: %s", task.TargetID)
 	}
 }
 
@@ -403,19 +404,20 @@ func (kademlia *Kademlia) handleFindValue(contact *Contact, msg Message) {
 	}
 
 	// Compute the KademliaID for the requested value using the CommandInfo as the key
-	hashKey := HashKademliaID(msg.CommandInfo)
+	hashKey := NewKademliaID(msg.CommandInfo)
 
 	// Attempt to retrieve the value from storage
-	value, found := kademlia.Storage.GetValue(hashKey)
-
+	value, found := kademlia.Storage.GetValue(*hashKey)
+	//log.Printf("(file: kademlia function: handleFindValue) findValue recived looking for filewith hash: %s", hashKey)
 	if found {
 		// Value is found, send it back to the requesting contact
 		response := fmt.Sprintf("returnFindValue:%s:%d:%s", kademlia.Network.ID.String(), commandID, value)
 		kademlia.Network.SendMessage(contact, response)
-		log.Printf("Value found for %s, sending response to %s with the value: %s", msg.CommandInfo, contact.Address, value)
+		//log.Printf("Value found for %s, sending response to %s with the value: %s", msg.CommandInfo, contact.Address, value)
 	} else {
 		// Value not found, find the closest contacts to the requested value
-		closestContacts := kademlia.RoutingTable.FindClosestContacts(&hashKey, bucketSize)
+		//log.Printf("(file: kademlia function: handleFindValue) file not found sending contacts insted")
+		closestContacts := kademlia.RoutingTable.FindClosestContacts(hashKey, bucketSize)
 
 		// Prepare the list of closest contacts in the format "<ID>:<Address>"
 		var responseMessage string
@@ -453,26 +455,27 @@ func (kademlia *Kademlia) handleReturnFindValue(contact *Contact, msg Message) {
 	}
 
 	if *task.TargetID == HashKademliaID(msg.CommandInfo) {
-		log.Printf("(File: kademlia: Function: handleReturnFindValue): File found Findvalue shit works!")
+		log.Printf("(File: kademlia: Function: handleReturnFindValue): The file was found: %s", msg.CommandInfo)
 		kademlia.MarkTaskAsCompleted(task.CommandID)
 	}
-	log.Printf("(File: kademlia: Function: handleReturnFindValue): this no worky?Command: %s, senderID: %s, Commandid: %s,Commandinfo: %s", msg.Command, msg.SenderID, msg.CommandID, msg.CommandInfo)
 }
 
 // handleStoreValue processes a "StoreValue" message
 func (kademlia *Kademlia) handleStoreValue(contact *Contact, msg Message) {
 	//log.Printf("(File: kademlia: Function: HandleStoreValue) Handling StoreValue from %s", contact.Address)
 	// log.Printf("(File: kademlia, Function: handleStoreValue) handlestorevalue is running: %s", msg.CommandInfo)
-	hashblabla := HashKademliaID(msg.CommandInfo)
+	hashKey := HashKademliaID(msg.CommandInfo)
 	// Extract the value to be stored from the CommandInfo field
 	value := msg.CommandInfo
 
 	// Store the value using the storage class
-	kademlia.Storage.StoreValue(hashblabla, value)
+	//log.Printf("(File: kademlia: Function: handleStoreValue) msg.commandInfo: %s", msg.CommandInfo)
+	//log.Printf("(File: kademlia: Function: handleStoreValue)hash value %x: actual value %s", hashKey, value)
+	kademlia.Storage.StoreValue(hashKey, value)
 
 	// Log the successful storage operation
 	//log.Printf("(File: kademlia: Function: handleStoreValue)Stored value for KademliaID %s: %s", hashblabla.String(), value)
-	message := fmt.Sprintf("returnStoreValue:%s:%s:%s", kademlia.Network.ID.String(), msg.CommandID, hashblabla.String())
+	message := fmt.Sprintf("returnStoreValue:%s:%s:%s", kademlia.Network.ID.String(), msg.CommandID, hashKey.String())
 	kademlia.Network.SendMessage(contact, message)
 }
 
@@ -531,8 +534,8 @@ func (kademlia *Kademlia) updateRoutingTable(newContact *Contact) {
 		// Ping the oldest contact if the bucket is full
 		oldestElement := bucket.list.Back()
 		if oldestElement != nil {
-			oldContact := oldestElement.Value.(*Contact)
-			kademlia.CheckContactStatus(oldContact, newContact)
+			oldContact := oldestElement.Value.(Contact)
+			kademlia.CheckContactStatus(&oldContact, newContact)
 		}
 	} else {
 		// Add the new contact since the bucket isn't full

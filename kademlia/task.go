@@ -101,6 +101,7 @@ func (task *Task) AreClosestContactsContacted() bool {
 
 func (kademlia *Kademlia) CreateTask(commandType string, commandID int, targetID *KademliaID) *Task {
 
+	//log.Printf("(File: task: Function: CreateTask)hash value %s: and commandType: %s", targetID, commandType)
 	task := Task{
 		CommandType:       commandType,
 		CommandID:         commandID,
@@ -177,9 +178,6 @@ func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 
 	// Task is completed when no more waiting for returns
 	if len(task.WaitingForReturns) == 0 {
-		if task.CommandType == "StoreValue" {
-
-		}
 		kademlia.RemoveTask(commandID)
 	}
 }
