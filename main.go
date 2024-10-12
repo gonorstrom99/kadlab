@@ -152,3 +152,29 @@ func main() {
 	//time.Sleep(2 * time.Second)
 
 }
+
+/*
+// Create a slice to hold the Kademlia nodes
+	var kademliaNodes []*kademlia.Kademlia
+
+	// Create and start 50 Kademlia nodes
+	for i := 1; i <= 50; i++ {
+		address := fmt.Sprintf("127.0.0.1:%d", 8000+i)
+		node := kademlia.CreateKademliaNode(address)
+		kademliaNodes = append(kademliaNodes, node)
+		node.Start()
+		fmt.Printf("Kademlia Node %d started at %s\n", i, address)
+	}
+
+	// Give some time for the nodes to start listening and processing messages
+	time.Sleep(1 * time.Second)
+
+	// Example: Add some contacts to the first node's routing table for testing
+	for i := 1; i < 50; i++ {
+		kademliaNodes[1].RoutingTable.AddContact(*kademliaNodes[i].RoutingTable.GetMe())
+		kademliaNodes[i].RoutingTable.AddContact(*kademliaNodes[1].RoutingTable.GetMe())
+	}
+	for i := 1; i < 50; i++ {
+		kademliaNodes[i].StartTask(&kademliaNodes[i].Network.ID, "LookupContact", "")
+	}
+*/
