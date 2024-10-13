@@ -3,6 +3,7 @@ package kademlia
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 )
 
@@ -28,12 +29,17 @@ func HashKademliaID(input string) KademliaID {
 	return [IDLength]byte(hashedBytes)
 }
 
-// NewKademliaID returns a new instance of a KademliaID based on the string input
 func NewKademliaID(data string) *KademliaID {
-	decoded, _ := hex.DecodeString(data)
-	//fmt.Printf("newkademliaID runnin       ")
-	//fmt.Printf("Decoded bytes: %v\n", decoded) // Print the raw byte slice
-	//log.Printf("(File: kademliaid, Function: NewKademliaID) %d", IDLength)
+	if len(data) != 40 { // Ensure the input is exactly 40 hex characters (20 bytes)
+		error := fmt.Sprintf("Invalid KademliaID: input must be 40 hexadecimal characters: %s", data)
+		panic(error)
+	}
+
+	decoded, err := hex.DecodeString(data)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to decode KademliaID: %s", err))
+	}
+
 	newKademliaID := KademliaID{}
 	for i := 0; i < IDLength; i++ {
 		newKademliaID[i] = decoded[i]
