@@ -8,7 +8,7 @@ import (
 // TestNewKademliaID verifies that a new KademliaID is created correctly from a string
 func TestNewKademliaID(t *testing.T) {
 	// Updated input to be 40 hex characters (20 bytes) long
-	data := "FFFFFFFF0000000000FFFFFFFF0000000000" // 40 characters = 20 bytes
+	data := "FFFFFFFFFF0000000000FFFFFFFFFF0000000000" // 40 characters = 20 bytes
 	kademliaID := NewKademliaID(data)
 
 	expectedBytes, _ := hex.DecodeString(data)
@@ -37,9 +37,9 @@ func TestNewRandomKademliaID(t *testing.T) {
 
 // TestLess checks the Less function for KademliaID comparison
 func TestLess(t *testing.T) {
-	id1 := NewKademliaID("00000000000000000000")
-	id2 := NewKademliaID("FFFFFFFFFFFFFFFFFFFF")
-	id3 := NewKademliaID("00000000000000000001") // Close to id1 for edge case
+	id1 := NewKademliaID("0000000000000000000000000000000000000000")
+	id2 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+	id3 := NewKademliaID("0000000000000000000000000000000000000001") // Close to id1 for edge case
 
 	// Test if id1 is less than id2
 	if !id1.Less(id2) {
@@ -62,7 +62,7 @@ func TestLess(t *testing.T) {
 	}
 
 	// Test if identical KademliaID's return false for both comparisons
-	id4 := NewKademliaID("00000000000000000000")
+	id4 := NewKademliaID("0000000000000000000000000000000000000000")
 	if id1.Less(id4) || id4.Less(id1) {
 		t.Errorf("Expected identical KademliaIDs to be equal in comparison")
 	}
@@ -70,9 +70,9 @@ func TestLess(t *testing.T) {
 
 // TestEquals checks if two KademliaIDs are correctly identified as equal
 func TestEquals(t *testing.T) {
-	id1 := NewKademliaID("FFFFFFFF0000000000FFFFFFFF0000000000")
-	id2 := NewKademliaID("FFFFFFFF0000000000FFFFFFFF0000000000")
-	id3 := NewKademliaID("00000000FFFFFFFFFFFFFFFF000000000000")
+	id1 := NewKademliaID("FFFFFFFF0000000000FFFFFFFF0000000000FFFF")
+	id2 := NewKademliaID("FFFFFFFF0000000000FFFFFFFF0000000000FFFF")
+	id3 := NewKademliaID("00000000FFFFFFFFFFFFFFFF0000000000000000")
 
 	// Test if id1 equals id2 (same value)
 	if !id1.Equals(id2) {
@@ -98,11 +98,11 @@ func TestEquals(t *testing.T) {
 // TestCalcDistance checks the CalcDistance function for XOR distance calculation
 func TestCalcDistance(t *testing.T) {
 	// Use full-length 20-byte Kademlia IDs (40 hexadecimal characters)
-	id1 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") // All bits set in the first half
-	id2 := NewKademliaID("00000000000000000000FFFFFFFFFFFFFFFF") // All bits set in the second half
+	id1 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF") // All bits set in the first half
+	id2 := NewKademliaID("0000000000000000000000000000000000000000") // All bits set in the second half
 
 	// The expected XOR distance (should be all F's as the difference between id1 and id2)
-	expectedDistance := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+	expectedDistance := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
 
 	// Calculate the XOR distance between id1 and id2
 	calculatedDistance := id1.CalcDistance(id2)
@@ -117,7 +117,7 @@ func TestCalcDistance(t *testing.T) {
 func TestString(t *testing.T) {
 	// Full-length 20-byte KademliaID (40 hexadecimal characters)
 	id := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFF0000000000000000")
-	expectedString := "ffffffffffffffffffffffff0000000000000000"
+	expectedString := "FFFFFFFFFFFFFFFFFFFFFFFF0000000000000000"
 
 	if id.String() != expectedString {
 		t.Errorf("Expected string to be %s, but got %s", expectedString, id.String())
