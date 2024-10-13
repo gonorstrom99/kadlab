@@ -15,10 +15,14 @@ const alpha = 3 //the number of nodes to be contacted simultaneosly
 const TTL = 200 // ms
 // Kademlia node
 type Kademlia struct {
-	Network      *Network
-	RoutingTable *RoutingTable
-	Tasks        []Task
-	Storage      *Storage
+	Network             *Network
+	RoutingTable        *RoutingTable
+	Tasks               []Task
+	Storage             *Storage
+	HandlePingSpy       func(contact *Contact, msg Message) // Inject the spy function here
+	HandlePongSpy       func(contact *Contact, msg Message)
+	HandleLookupSpy     func(contact *Contact, msg Message)
+	HandleStoreValueSpy func(contact *Contact, msg Message)
 }
 
 func TestPrinter(printThis string) {
@@ -127,18 +131,23 @@ func (kademlia *Kademlia) processMessages() {
 			// Handle different message types based on the "Command" field
 			switch msg.Command {
 			case "ping":
-				// Respond with "pong" to a ping message
-				log.Printf("Received ping from %s", msg.SenderAddress)
-
-				kademlia.handlePing(contact, msg)
-
+				if kademlia.HandlePingSpy != nil {
+					kademlia.HandlePingSpy(contact, msg)
+				} else {
+					kademlia.handlePing(contact, msg) // Default to actual function if no spy
+				}
 			case "pong":
-				kademlia.handlePongMessage(contact, msg)
-				//log.Printf("Received pong from %s", msg.SenderAddress)
-
+				if kademlia.HandlePongSpy != nil {
+					kademlia.HandlePongSpy(contact, msg)
+				} else {
+					kademlia.handlePongMessage(contact, msg)
+				}
 			case "LookupContact":
-				kademlia.handleLookupContact(contact, msg)
-
+				if kademlia.HandleLookupSpy != nil {
+					kademlia.HandleLookupSpy(contact, msg)
+				} else {
+					kademlia.handleLookupContact(contact, msg)
+				}
 			case "returnLookupContact":
 				kademlia.handleReturnLookupContact(contact, msg)
 
@@ -149,10 +158,11 @@ func (kademlia *Kademlia) processMessages() {
 				kademlia.handleReturnFindValue(contact, msg)
 
 			case "StoreValue":
-				// log.Printf("(File: Kademlia, function: processMessages) handling storevalue %s", msg.SenderAddress)
-
-				kademlia.handleStoreValue(contact, msg)
-
+				if kademlia.HandleStoreValueSpy != nil {
+					kademlia.HandleStoreValueSpy(contact, msg)
+				} else {
+					kademlia.handleStoreValue(contact, msg)
+				}
 			case "returnStoreValue":
 				kademlia.handleReturnStoreValue(contact, msg)
 
