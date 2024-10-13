@@ -1,11 +1,5 @@
 package kademlia
 
-// import (
-// 	"net"
-// 	"testing"
-// 	"time"
-// )
-
 // // Test the SendMessage function by using real UDP connections
 // func TestSendMessage(t *testing.T) {
 // 	// Create the receiving UDP server (listener)

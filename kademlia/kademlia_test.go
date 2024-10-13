@@ -23,6 +23,19 @@ package kademlia
 // 	if bucket.Len() < 1 {
 // 		t.Fatalf("we tried adding a contact but it did not get added")
 // 	}
+// func TestKademliaContactAdding(t *testing.T) {
+// 	KademliaNode1 := CreateKademliaNode("127.0.0.1:8000")
+// 	KademliaNode2 := CreateKademliaNode("127.0.0.1:8001")
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+// 	bucketIndex := KademliaNode1.RoutingTable.getBucketIndex(KademliaNode2.RoutingTable.me.ID)
+// 	bucket := KademliaNode1.RoutingTable.getBucket(bucketIndex)
+// 	if bucket.Len() > 1 {
+// 		t.Fatalf("the same contact got added twice somehow")
+// 	}
+// 	if bucket.Len() < 1 {
+// 		t.Fatalf("we tried adding a contact but it did not get added")
+// 	}
 
 // 	// Add more tests for other functions
 // }
@@ -95,7 +108,12 @@ package kademlia
 // 	KademliaNode1.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
 // 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 // 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
+// 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
 
+// 	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
 // 	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
 
 // 	// time.Sleep(1 * time.Second)
@@ -113,7 +131,9 @@ package kademlia
 // 	// // }
 
 // }
+// }
 
+// func TestFullBucket(t *testing.T) {
 // func TestFullBucket(t *testing.T) {
 
 // 	KademliaNode1 := CreateKademliaNode("127.0.0.1:8016")
@@ -133,7 +153,12 @@ package kademlia
 // 	KademliaNode1.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
 // 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
 // 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode2.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode3.RoutingTable.GetMe())
+// 	KademliaNode1.RoutingTable.AddContact(*KademliaNode4.RoutingTable.GetMe())
+// 	KademliaNode5.RoutingTable.AddContact(*KademliaNode1.RoutingTable.GetMe())
 
+// 	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
 // 	KademliaNode5.StartTask(KademliaNode5.RoutingTable.GetMe().ID, "LookupContact", "asd")
 
 // 	time.Sleep(1 * time.Second)
@@ -149,5 +174,19 @@ package kademlia
 // 	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe())) {
 // 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
 // 	}
+// 	time.Sleep(1 * time.Second)
+// 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode2.RoutingTable.GetMe())) {
+// 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+// 	}
+// 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode3.RoutingTable.GetMe())) {
+// 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+// 	}
+// 	if !(KademliaNode5.RoutingTable.IsContactInRoutingTable(KademliaNode4.RoutingTable.GetMe())) {
+// 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+// 	}
+// 	if !(KademliaNode1.RoutingTable.IsContactInRoutingTable(KademliaNode5.RoutingTable.GetMe())) {
+// 		t.Fatalf("(File: kademlia_test, Test: TestNetworkJoining) The network joining did not work")
+// 	}
 
+// }
 // }
