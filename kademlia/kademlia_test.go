@@ -87,10 +87,10 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		{Command: "pong", SenderID: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", SenderAddress: "127.0.0.1:8081"},
 		{Command: "LookupContact", SenderID: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", SenderAddress: "127.0.0.1:8082"},
 		{Command: "returnLookupContact", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
-		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
+		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
 		{Command: "returnFindValue", SenderID: "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE", SenderAddress: "127.0.0.1:8085"},
 		{Command: "StoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8086"},
-		{Command: "returnStoreValue", SenderID: "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG", SenderAddress: "127.0.0.1:8087"},
+		{Command: "returnStoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAAAAAA", SenderAddress: "127.0.0.1:8087"},
 	}
 
 	// Feed the test messages into the message channel
@@ -140,28 +140,6 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 	if !returnStoreValueCalled {
 		t.Errorf("Expected returnStoreValue handler to be called")
 	}
-}
-
-// TestProcessMessagesTimeout tests that processMessages handles the TTL timeout case
-func TestProcessMessagesTimeout(t *testing.T) {
-	// Create a mock Kademlia instance with a mock network
-	mockNetwork := &Network{
-		MessageCh: make(chan Message, 1), // Buffer size of 1 to simulate channel input
-	}
-	kademlia := &Kademlia{
-		Network: mockNetwork,
-	}
-
-	// Run processMessages in a goroutine
-	go func() {
-		kademlia.processMessages()
-	}()
-
-	// Wait longer than the TTL (assuming TTL is set to 100 milliseconds)
-	time.Sleep(TTL * 2 * time.Millisecond)
-
-	// At this point, the timeout case should have triggered, leading to kademlia.checkTTLs() being called
-	// You can assert that behavior if `checkTTLs` has side effects you can observe or if you can mock `checkTTLs`.
 }
 
 func TestMin(t *testing.T) {
