@@ -15,14 +15,15 @@ const alpha = 3 //the number of nodes to be contacted simultaneosly
 const TTL = 200 // ms
 // Kademlia node
 type Kademlia struct {
-	Network             *Network
-	RoutingTable        *RoutingTable
-	Tasks               []Task
-	Storage             *Storage
-	HandlePingSpy       func(contact *Contact, msg Message) // Inject the spy function here
-	HandlePongSpy       func(contact *Contact, msg Message)
-	HandleLookupSpy     func(contact *Contact, msg Message)
-	HandleStoreValueSpy func(contact *Contact, msg Message)
+	Network                      *Network
+	RoutingTable                 *RoutingTable
+	Tasks                        []Task
+	Storage                      *Storage
+	HandlePingSpy                func(contact *Contact, msg Message) // Inject the spy function here
+	HandlePongSpy                func(contact *Contact, msg Message)
+	HandleLookupSpy              func(contact *Contact, msg Message)
+	HandleReturnLookupContactSpy func(contact *Contact, msg Message)
+	HandleStoreValueSpy          func(contact *Contact, msg Message)
 }
 
 func TestPrinter(printThis string) {
@@ -149,8 +150,11 @@ func (kademlia *Kademlia) processMessages() {
 					kademlia.handleLookupContact(contact, msg)
 				}
 			case "returnLookupContact":
-				kademlia.handleReturnLookupContact(contact, msg)
-
+				if kademlia.HandleReturnLookupContactSpy != nil {
+					kademlia.HandleReturnLookupContactSpy(contact, msg)
+				} else {
+					kademlia.handleReturnLookupContact(contact, msg)
+				}
 			case "FindValue":
 				kademlia.handleFindValue(contact, msg)
 

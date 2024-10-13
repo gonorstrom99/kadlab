@@ -41,6 +41,7 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 	pingCalled := false
 	pongCalled := false
 	lookupCalled := false
+	returnlookupcontactCalled := false
 	storeValueCalled := false
 
 	// Inject spies
@@ -56,6 +57,10 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		lookupCalled = true
 	}
 
+	kademlia.HandleReturnLookupContactSpy = func(contact *Contact, msg Message) {
+		returnlookupcontactCalled = true
+	}
+
 	kademlia.HandleStoreValueSpy = func(contact *Contact, msg Message) {
 		storeValueCalled = true
 	}
@@ -65,6 +70,7 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		{Command: "ping", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8080"},
 		{Command: "pong", SenderID: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", SenderAddress: "127.0.0.1:8081"},
 		{Command: "LookupContact", SenderID: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", SenderAddress: "127.0.0.1:8082"},
+		{Command: "returnLookupContact", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
 		{Command: "StoreValue", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
 	}
 
@@ -94,6 +100,10 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 
 	if !lookupCalled {
 		t.Errorf("Expected LookupContact handler to be called")
+	}
+
+	if !returnlookupcontactCalled {
+		t.Errorf("Expected returnLookupContact handler to be called")
 	}
 
 	if !storeValueCalled {
