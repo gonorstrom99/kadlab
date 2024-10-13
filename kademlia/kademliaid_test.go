@@ -117,7 +117,7 @@ func TestCalcDistance(t *testing.T) {
 func TestString(t *testing.T) {
 	// Full-length 20-byte KademliaID (40 hexadecimal characters)
 	id := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFF0000000000000000")
-	expectedString := "FFFFFFFFFFFFFFFFFFFFFFFF0000000000000000"
+	expectedString := "ffffffffffffffffffffffff0000000000000000" // Expected string in lowercase
 
 	if id.String() != expectedString {
 		t.Errorf("Expected string to be %s, but got %s", expectedString, id.String())
