@@ -1,6 +1,6 @@
 package kademlia
 
-const bucketSize int = 10
+const bucketSize int = 20
 
 // RoutingTable definition
 // keeps a refrence contact of me and an array of buckets

@@ -68,7 +68,16 @@ func main() {
 					fileToShow := argument
 					hashedFile := kademlia.HashKademliaID(fileToShow)
 					value, found := KademliaNode1.Storage.GetValue(hashedFile)
-					log.Printf("value found? %s%t", value, found)
+					log.Printf("value found? %s%b", value, found)
+				} else if command == "get" {
+					// fileToStore := argument
+					// hashedFile := kademlia.HashKademliaID(fileToStore)
+					// hashedFile := argument
+					hashedFile := kademlia.NewKademliaID(argument)
+					KademliaNode1.StartTask(hashedFile, "FindValue", "")
+
+					// KademliaNode1.StartTask(&hashedFile, "FindValue", fileToStore)
+
 				} else {
 					fmt.Println("Unknown command. Type command followed by an argument.")
 				}

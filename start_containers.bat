@@ -22,7 +22,7 @@ rem Starting port number
 set START_PORT=8001
 
 rem Number of containers to create
-set NUM_CONTAINERS=9
+set NUM_CONTAINERS=50
 
 rem Loop to create the containers
 for /l %%i in (1,1,%NUM_CONTAINERS%) do (

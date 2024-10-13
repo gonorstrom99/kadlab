@@ -1,113 +1,126 @@
 package kademlia
 
 import (
-	"strconv"
 	"testing"
 )
 
-// TestNewBucket checks if a new bucket is properly initialized
-func TestNewBucket(t *testing.T) {
-	bucket := newBucket()
-	if bucket.list == nil {
-		t.Error("Expected new bucket to have a non-nil list")
-	}
-	if bucket.Len() != 0 {
-		t.Error("Expected new bucket to be empty")
-	}
-}
-
-// TestAddContact checks if contacts are added properly to the bucket
+// TestAddContact tests adding contacts to the bucket
 func TestAddContact(t *testing.T) {
 	bucket := newBucket()
-	contact := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
 
-	// Add the contact and verify it is in the bucket
-	bucket.AddContact(contact)
-	if bucket.Len() != 1 {
-		t.Errorf("Expected bucket size to be 1, got %d", bucket.Len())
+	// Create some contacts
+	contact1 := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	contact2 := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+
+	// Add contacts to the bucket
+	bucket.AddContact(contact1)
+	bucket.AddContact(contact2)
+
+	// Check if the contacts were added
+	if !bucket.IsContactInBucket(&contact1) {
+		t.Errorf("Expected contact1 to be in the bucket")
 	}
-	if !bucket.IsContactInBucket(&contact) {
-		t.Error("Expected contact to be in the bucket but it wasn't")
+	if !bucket.IsContactInBucket(&contact2) {
+		t.Errorf("Expected contact2 to be in the bucket")
 	}
 
-	// Add the same contact again and check that the size doesn't change
-	bucket.AddContact(contact)
-	if bucket.Len() != 1 {
-		t.Errorf("Expected bucket size to remain 1, got %d", bucket.Len())
+	// Check if the length of the bucket is 2go test -p
+	if bucket.Len() != 2 {
+		t.Errorf("Expected bucket length to be 2, but got %d", bucket.Len())
 	}
 }
 
-// TestAddMultipleContacts checks if multiple contacts can be added to the bucket
-func TestAddMultipleContacts(t *testing.T) {
+// Test that adding an existing contact moves it to the front of the bucket
+func TestAddExistingContactMovesToFront(t *testing.T) {
 	bucket := newBucket()
 
-	for i := 0; i < bucketSize; i++ {
-		contact := NewContact(NewRandomKademliaID(), "127.0.0.1:"+strconv.Itoa(8000+i))
-		bucket.AddContact(contact)
-		if bucket.Len() != i+1 {
-			t.Errorf("Expected bucket size to be %d, got %d", i+1, bucket.Len())
-		}
+	// Create contacts
+	contact1 := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	contact2 := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+
+	// Add both contacts to the bucket
+	bucket.AddContact(contact1)
+	bucket.AddContact(contact2)
+
+	// Check that contact2 is at the front (as it was the last added)
+	if bucket.list.Front().Value.(Contact).ID != contact2.ID {
+		t.Errorf("Expected contact2 to be at the front")
 	}
 
-	// Check that the bucket does not exceed its capacity
-	if bucket.Len() > bucketSize {
-		t.Errorf("Bucket size exceeded bucketSize: got %d", bucket.Len())
-	}
-}
+	// Re-add contact1 (should move it to the front)
+	bucket.AddContact(contact1)
 
-// TestGetContactAndCalcDistance checks if the contacts are returned with calculated distance
-func TestGetContactAndCalcDistance(t *testing.T) {
-	bucket := newBucket()
-	targetID := NewRandomKademliaID()
-
-	for i := 0; i < 5; i++ {
-		contact := NewContact(NewRandomKademliaID(), "127.0.0.1:"+strconv.Itoa(8000+i))
-		bucket.AddContact(contact)
-	}
-
-	contacts := bucket.GetContactAndCalcDistance(targetID)
-
-	if len(contacts) != bucket.Len() {
-		t.Errorf("Expected %d contacts, but got %d", bucket.Len(), len(contacts))
-	}
-
-	// Verify that the distance has been calculated for each contact
-	for _, contact := range contacts {
-		if contact.distance == nil {
-			t.Error("Expected contact to have a calculated distance but it didn't")
-		}
+	// Check that contact1 is now at the front
+	if bucket.list.Front().Value.(Contact).ID != contact1.ID {
+		t.Errorf("Expected contact1 to be moved to the front")
 	}
 }
 
-// TestIsContactInBucket checks if the function correctly identifies if a contact is in the bucket
-func TestIsContactInBucket(t *testing.T) {
-	bucket := newBucket()
-	contact := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
-	bucket.AddContact(contact)
-
-	if !bucket.IsContactInBucket(&contact) {
-		t.Error("Expected contact to be in the bucket but it wasn't")
-	}
-
-	// Test for a contact not in the bucket
-	otherContact := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
-	if bucket.IsContactInBucket(&otherContact) {
-		t.Error("Did not expect the contact to be in the bucket but it was")
-	}
-}
-
-// TestBucketLen checks if the Len function returns the correct size
+// Test that the bucket returns the correct length
 func TestBucketLen(t *testing.T) {
 	bucket := newBucket()
 
+	// Check that the bucket is initially empty
 	if bucket.Len() != 0 {
-		t.Errorf("Expected bucket length to be 0, got %d", bucket.Len())
+		t.Errorf("Expected bucket length to be 0, but got %d", bucket.Len())
 	}
 
+	// Add contacts to the bucket
+	contact1 := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	contact2 := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+	bucket.AddContact(contact1)
+	bucket.AddContact(contact2)
+
+	// Check the length after adding contacts
+	expectedLen := 2
+	if bucket.Len() != expectedLen {
+		t.Errorf("Expected bucket length to be %d, but got %d", expectedLen, bucket.Len())
+	}
+}
+
+// Test GetContactAndCalcDistance to ensure distance is calculated correctly
+func TestGetContactAndCalcDistance(t *testing.T) {
+	bucket := newBucket()
+
+	// Create a contact and a target KademliaID
+	target := NewRandomKademliaID()
 	contact := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+
+	// Add contact to the bucket
 	bucket.AddContact(contact)
 
-	if bucket.Len() != 1 {
-		t.Errorf("Expected bucket length to be 1, got %d", bucket.Len())
+	// Get contacts with calculated distances
+	contacts := bucket.GetContactAndCalcDistance(target)
+
+	// There should be one contact returned
+	if len(contacts) != 1 {
+		t.Errorf("Expected 1 contact, but got %d", len(contacts))
+	}
+
+	// The contact's distance should be calculated
+	if contacts[0].distance == nil {
+		t.Errorf("Expected distance to be calculated, but it was nil")
+	}
+}
+
+// Test IsContactInBucket checks if a contact is correctly identified in the bucket
+func TestIsContactInBucket(t *testing.T) {
+	bucket := newBucket()
+
+	// Create contacts
+	contact1 := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	contact2 := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+
+	// Add contact1 to the bucket
+	bucket.AddContact(contact1)
+
+	// Check if contact1 is in the bucket
+	if !bucket.IsContactInBucket(&contact1) {
+		t.Errorf("Expected contact1 to be in the bucket")
+	}
+
+	// Check if contact2 is in the bucket (it should not be)
+	if bucket.IsContactInBucket(&contact2) {
+		t.Errorf("Did not expect contact2 to be in the bucket")
 	}
 }
