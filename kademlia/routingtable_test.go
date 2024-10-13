@@ -1,6 +1,7 @@
 package kademlia
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -155,5 +156,51 @@ func TestGetBucket(t *testing.T) {
 	// Ensure the contact is now in the bucket
 	if !bucket.IsContactInBucket(&contact) {
 		t.Errorf("Contact %s not found in bucket after adding", contact.ID.String())
+	}
+}
+
+// TestIsContactInRoutingTable checks that IsContactInRoutingTable correctly identifies if a contact is in the routing table
+func TestIsContactInRoutingTable(t *testing.T) {
+	me := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	routingTable := NewRoutingTable(me)
+
+	// Create another contact and check before adding
+	contact := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+	if routingTable.IsContactInRoutingTable(&contact) {
+		t.Errorf("Contact %s shouldn't be in the routing table yet", contact.ID.String())
+	}
+
+	// Add the contact and check again
+	routingTable.AddContact(contact)
+	if !routingTable.IsContactInRoutingTable(&contact) {
+		t.Errorf("Contact %s should be in the routing table, but isn't", contact.ID.String())
+	}
+}
+
+// TestIsBucketFull checks if IsBucketFull correctly identifies when a bucket is full
+func TestIsBucketFull(t *testing.T) {
+	me := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	routingTable := NewRoutingTable(me)
+
+	// Add contacts until the bucket is full
+	contact := NewContact(NewRandomKademliaID(), "127.0.0.1:8001")
+	bucketIndex := routingTable.getBucketIndex(contact.ID)
+	bucket := routingTable.buckets[bucketIndex]
+
+	for i := 0; i < bucketSize; i++ {
+		newContact := NewContact(NewRandomKademliaID(), "127.0.0.1:"+strconv.Itoa(8000+i))
+		bucket.AddContact(newContact)
+	}
+
+	// Now the bucket should be full
+	if !routingTable.IsBucketFull(bucket) {
+		t.Errorf("Expected the bucket to be full, but it's not")
+	}
+
+	// Add one more contact, and check that the bucket remains full
+	overflowContact := NewContact(NewRandomKademliaID(), "127.0.0.1:"+strconv.Itoa(9000))
+	bucket.AddContact(overflowContact)
+	if !routingTable.IsBucketFull(bucket) {
+		t.Errorf("Expected the bucket to be full after adding another contact")
 	}
 }
