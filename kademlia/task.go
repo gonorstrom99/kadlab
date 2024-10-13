@@ -181,11 +181,11 @@ func (kademlia *Kademlia) RemoveContactFromTask(commandID int, contact Contact) 
 }
 
 // MarkTaskAsCompleted updates the task when all contacts have responded or it is considered done
-func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
+func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) int {
 	task, err := kademlia.FindTaskByCommandID(commandID)
 	if err != nil {
 		log.Printf("Task with CommandID %d not found", commandID)
-		return
+		return -1
 	}
 
 	// Task is completed when no more waiting for returns
@@ -195,7 +195,7 @@ func (kademlia *Kademlia) MarkTaskAsCompleted(commandID int) {
 		}
 	}
 	kademlia.RemoveTask(commandID)
-
+	return 1
 }
 func (kademlia *Kademlia) RemoveTask(commandID int) {
 	var remainingTasks []Task
