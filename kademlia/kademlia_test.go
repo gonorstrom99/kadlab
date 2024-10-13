@@ -84,13 +84,13 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 	// Prepare test messages for different commands
 	testMessages := []Message{
 		{Command: "ping", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8080"},
-		{Command: "pong", SenderID: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", SenderAddress: "127.0.0.1:8081"},
-		{Command: "LookupContact", SenderID: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", SenderAddress: "127.0.0.1:8082"},
-		{Command: "returnLookupContact", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
-		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
-		{Command: "returnFindValue", SenderID: "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE", SenderAddress: "127.0.0.1:8085"},
-		{Command: "StoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8086"},
-		{Command: "returnStoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAAAAAA", SenderAddress: "127.0.0.1:8087"},
+		{Command: "pong", SenderID: "0000000000000000000000000000000000000000", SenderAddress: "127.0.0.1:8081"},
+		{Command: "LookupContact", SenderID: "FFFFFFFF00000000FFFFFFFF00000000FFFFFFFF", SenderAddress: "127.0.0.1:8082"},
+		{Command: "returnLookupContact", SenderID: "00000000FFFFFFFF00000000FFFFFFFF00000000", SenderAddress: "127.0.0.1:8083"},
+		{Command: "FindValue", SenderID: "FFFFFFFFFFFFFFFF0000000000000000FFFFFFFF", SenderAddress: "127.0.0.1:8084"},
+		{Command: "returnFindValue", SenderID: "0000000000000000FFFFFFFFFFFFFFFF00000000", SenderAddress: "127.0.0.1:8085"},
+		{Command: "StoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFF0000000000000000", SenderAddress: "127.0.0.1:8086"},
+		{Command: "returnStoreValue", SenderID: "00000000000000000000FFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8087"},
 	}
 
 	// Feed the test messages into the message channel
