@@ -42,7 +42,10 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 	pongCalled := false
 	lookupCalled := false
 	returnlookupcontactCalled := false
+	findValueCalled := false
+	returnFindValueCalled := false
 	storeValueCalled := false
+	returnStoreValueCalled := false
 
 	// Inject spies
 	kademlia.HandlePingSpy = func(contact *Contact, msg Message) {
@@ -61,17 +64,32 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		returnlookupcontactCalled = true
 	}
 
+	kademlia.HandleFindValueSpy = func(contact *Contact, msg Message) {
+		findValueCalled = true
+	}
+
+	kademlia.HandleReturnFindValueSpy = func(contact *Contact, msg Message) {
+		returnFindValueCalled = true
+	}
+
 	kademlia.HandleStoreValueSpy = func(contact *Contact, msg Message) {
 		storeValueCalled = true
 	}
 
-	// Prepare test messages
+	kademlia.HandleReturnStoreValueSpy = func(contact *Contact, msg Message) {
+		returnStoreValueCalled = true
+	}
+
+	// Prepare test messages for different commands
 	testMessages := []Message{
 		{Command: "ping", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8080"},
 		{Command: "pong", SenderID: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", SenderAddress: "127.0.0.1:8081"},
 		{Command: "LookupContact", SenderID: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", SenderAddress: "127.0.0.1:8082"},
 		{Command: "returnLookupContact", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
-		{Command: "StoreValue", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
+		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
+		{Command: "returnFindValue", SenderID: "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE", SenderAddress: "127.0.0.1:8085"},
+		{Command: "StoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8086"},
+		{Command: "returnStoreValue", SenderID: "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG", SenderAddress: "127.0.0.1:8087"},
 	}
 
 	// Feed the test messages into the message channel
@@ -106,8 +124,20 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		t.Errorf("Expected returnLookupContact handler to be called")
 	}
 
+	if !findValueCalled {
+		t.Errorf("Expected FindValue handler to be called")
+	}
+
+	if !returnFindValueCalled {
+		t.Errorf("Expected returnFindValue handler to be called")
+	}
+
 	if !storeValueCalled {
 		t.Errorf("Expected StoreValue handler to be called")
+	}
+
+	if !returnStoreValueCalled {
+		t.Errorf("Expected returnStoreValue handler to be called")
 	}
 }
 
