@@ -1,10 +1,37 @@
 package kademlia
 
 import (
+	"crypto/sha1"
 	"encoding/hex"
 	"testing"
 	"time"
 )
+
+// TestHashKademliaID tests if the KademliaID is correctly hashed using SHA-1
+func TestHashKademliaID(t *testing.T) {
+	// Input string for the test
+	input := "this is a test input"
+
+	// Manually compute the expected SHA-1 hash for the input string
+	hasher := sha1.New()
+	hasher.Write([]byte(input))
+	expectedHash := hasher.Sum(nil)
+
+	// Call HashKademliaID to generate the KademliaID hash
+	kademliaID := HashKademliaID(input)
+
+	// Check if the length of the hashed ID is correct (should be IDLength bytes, which is 20 bytes for SHA-1)
+	if len(kademliaID) != IDLength {
+		t.Fatalf("Expected KademliaID length to be %d, but got %d", IDLength, len(kademliaID))
+	}
+
+	// Compare the result with the expected SHA-1 hash byte-by-byte
+	for i := 0; i < IDLength; i++ {
+		if kademliaID[i] != expectedHash[i] {
+			t.Errorf("Expected byte %d to be %x, but got %x", i, expectedHash[i], kademliaID[i])
+		}
+	}
+}
 
 // TestNewKademliaID verifies that a new KademliaID is created correctly from a string
 func TestNewKademliaID(t *testing.T) {

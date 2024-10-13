@@ -15,10 +15,18 @@ const alpha = 3 //the number of nodes to be contacted simultaneosly
 const TTL = 200 // ms
 // Kademlia node
 type Kademlia struct {
-	Network      *Network
-	RoutingTable *RoutingTable
-	Tasks        []Task
-	Storage      *Storage
+	Network                      *Network
+	RoutingTable                 *RoutingTable
+	Tasks                        []Task
+	Storage                      *Storage
+	HandlePingSpy                func(contact *Contact, msg Message) // Inject the spy function here
+	HandlePongSpy                func(contact *Contact, msg Message)
+	HandleLookupSpy              func(contact *Contact, msg Message)
+	HandleReturnLookupContactSpy func(contact *Contact, msg Message)
+	HandleFindValueSpy           func(contact *Contact, msg Message)
+	HandleReturnFindValueSpy     func(contact *Contact, msg Message)
+	HandleStoreValueSpy          func(contact *Contact, msg Message)
+	HandleReturnStoreValueSpy    func(contact *Contact, msg Message)
 }
 
 func TestPrinter(printThis string) {
@@ -108,62 +116,80 @@ func (kademlia *Kademlia) StartTask(lookupTarget *KademliaID, commandType string
 	}
 }
 
-// processMessages listens to the Network's channel and handles messages or performs other tasks if no messages are available
 func (kademlia *Kademlia) processMessages() {
-
 	for {
 		select {
 		case msg := <-kademlia.Network.MessageCh: // If there's a message in the channel
-			//log.Printf("(File: kademlia: Function: processMessages) processing message: '%s' from %s with nodeID: %s and commandID: %s", msg.Command, msg.SenderAddress, msg.SenderID, msg.CommandID)
-
-			// // Create a contact using the sender's ID and address
-			// log.Printf("msg.SenderID: %s", msg.SenderID)
-			// log.Printf(msg.Command + ":" + msg.CommandInfo + ":" + msg.CommandID + ":" + msg.SenderID + ":" + msg.SenderAddress)
+			// Create a contact using the sender's ID and address
 			contact := &Contact{
 				ID:      NewKademliaID(msg.SenderID), // Convert the sender's ID to a KademliaID
 				Address: msg.SenderAddress,           // The sender's IP and port
 			}
-			// log.Print(msg)
+
 			// Handle different message types based on the "Command" field
 			switch msg.Command {
 			case "ping":
-				// Respond with "pong" to a ping message
-				log.Printf("Received ping from %s", msg.SenderAddress)
-
-				kademlia.handlePing(contact, msg)
+				if kademlia.HandlePingSpy != nil {
+					kademlia.HandlePingSpy(contact, msg)
+				} else {
+					kademlia.handlePing(contact, msg) // Default to actual function if no spy
+				}
 
 			case "pong":
-				kademlia.handlePongMessage(contact, msg)
-				//log.Printf("Received pong from %s", msg.SenderAddress)
+				if kademlia.HandlePongSpy != nil {
+					kademlia.HandlePongSpy(contact, msg)
+				} else {
+					kademlia.handlePongMessage(contact, msg)
+				}
 
 			case "LookupContact":
-				kademlia.handleLookupContact(contact, msg)
+				if kademlia.HandleLookupSpy != nil {
+					kademlia.HandleLookupSpy(contact, msg)
+				} else {
+					kademlia.handleLookupContact(contact, msg)
+				}
 
 			case "returnLookupContact":
-				kademlia.handleReturnLookupContact(contact, msg)
+				if kademlia.HandleReturnLookupContactSpy != nil {
+					kademlia.HandleReturnLookupContactSpy(contact, msg)
+				} else {
+					kademlia.handleReturnLookupContact(contact, msg)
+				}
 
 			case "FindValue":
-				kademlia.handleFindValue(contact, msg)
+				if kademlia.HandleFindValueSpy != nil {
+					kademlia.HandleFindValueSpy(contact, msg)
+				} else {
+					kademlia.handleFindValue(contact, msg)
+				}
 
 			case "returnFindValue":
-				kademlia.handleReturnFindValue(contact, msg)
+				if kademlia.HandleReturnFindValueSpy != nil {
+					kademlia.HandleReturnFindValueSpy(contact, msg)
+				} else {
+					kademlia.handleReturnFindValue(contact, msg)
+				}
 
 			case "StoreValue":
-				// log.Printf("(File: Kademlia, function: processMessages) handling storevalue %s", msg.SenderAddress)
-
-				kademlia.handleStoreValue(contact, msg)
+				if kademlia.HandleStoreValueSpy != nil {
+					kademlia.HandleStoreValueSpy(contact, msg)
+				} else {
+					kademlia.handleStoreValue(contact, msg)
+				}
 
 			case "returnStoreValue":
-				kademlia.handleReturnStoreValue(contact, msg)
+				if kademlia.HandleReturnStoreValueSpy != nil {
+					kademlia.HandleReturnStoreValueSpy(contact, msg)
+				} else {
+					kademlia.handleReturnStoreValue(contact, msg)
+				}
 
 			default:
-				// Log unknown command types
-				//log.Printf("Received unknown message type '%s' from %s and commandID: %s", msg.Command, msg.SenderAddress, msg.CommandID)
+				// Handle unknown command types if necessary
 			}
 
 		case <-time.After(TTL * time.Millisecond): // If no message is received after 100 ms
 			// Perform some other action when no messages are received
-			// log.Print("case after")
 			kademlia.checkTTLs()
 		}
 	}
