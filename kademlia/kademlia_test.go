@@ -86,10 +86,10 @@ func TestProcessMessagesWithSpies(t *testing.T) {
 		{Command: "pong", SenderID: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", SenderAddress: "127.0.0.1:8081"},
 		{Command: "LookupContact", SenderID: "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB", SenderAddress: "127.0.0.1:8082"},
 		{Command: "returnLookupContact", SenderID: "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", SenderAddress: "127.0.0.1:8083"},
-		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
+		{Command: "FindValue", SenderID: "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD", SenderAddress: "127.0.0.1:8084"},
 		{Command: "returnFindValue", SenderID: "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE", SenderAddress: "127.0.0.1:8085"},
 		{Command: "StoreValue", SenderID: "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", SenderAddress: "127.0.0.1:8086"},
-		{Command: "returnStoreValue", SenderID: "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG", SenderAddress: "127.0.0.1:8087"},
+		{Command: "returnStoreValue", SenderID: "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG", SenderAddress: "127.0.0.1:8087"},
 	}
 
 	// Feed the test messages into the message channel
