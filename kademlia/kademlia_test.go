@@ -313,3 +313,50 @@ func TestUpdateRoutingTable(t *testing.T) {
 	// Verify that the oldest contact was pinged (the oldest one should still be in the back)
 
 }
+
+func TestHandleTaskCompletion(t *testing.T) {
+
+	me := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	routingTable := NewRoutingTable(me)
+	network := &Network{
+		ID:        *me.ID,
+		MessageCh: make(chan Message),
+	}
+	storage := NewStorage()
+	kademlia := NewKademlia(network, routingTable, []Task{}, storage)
+	task := Task{
+		CommandID:   2,
+		CommandType: "FindValue",
+		TargetID:    NewRandomKademliaID(),
+	}
+
+	// Call handleTaskCompletion
+	kademlia.handleTaskCompletion(&task)
+
+	// Check if the file-not-found log was produced (you would replace this with proper log checking in real-world code)
+	expectedLog := fmt.Sprintf("(file: kademlia function: handleTaskCompletion) file not found: %s", task.TargetID)
+	t.Logf(expectedLog) // This just illustrates where you'd verify the log.
+}
+func TestNewCommandID(t *testing.T) {
+	// Call NewCommandID and verify it returns an integer
+	commandID1 := NewCommandID()
+	if commandID1 == 0 {
+		t.Errorf("Expected NewCommandID to return a non-zero integer, but got %d", commandID1)
+	}
+
+	// Call NewCommandID again and verify it returns a different integer
+	commandID2 := NewCommandID()
+	if commandID1 == commandID2 {
+		t.Errorf("Expected two successive calls to NewCommandID to return different values, but got the same value %d", commandID1)
+	}
+
+	// Further, check that multiple values are unique by calling NewCommandID multiple times
+	seenIDs := make(map[int]bool)
+	for i := 0; i < 100; i++ {
+		newID := NewCommandID()
+		if seenIDs[newID] {
+			t.Errorf("Duplicate command ID detected: %d", newID)
+		}
+		seenIDs[newID] = true
+	}
+}

@@ -107,11 +107,11 @@ kadlab/kademlia/kademlia.go:367.44,369.40 2 0
 kadlab/kademlia/kademlia.go:369.40,370.12 1 0
 kadlab/kademlia/kademlia.go:373.3,376.51 3 0
 kadlab/kademlia/kademlia.go:376.51,379.4 2 0
-kadlab/kademlia/kademlia.go:384.60,388.38 1 0
+kadlab/kademlia/kademlia.go:384.60,388.38 1 1
 kadlab/kademlia/kademlia.go:388.38,391.30 3 0
 kadlab/kademlia/kademlia.go:391.30,396.4 2 0
-kadlab/kademlia/kademlia.go:397.8,397.44 1 0
-kadlab/kademlia/kademlia.go:397.44,399.3 1 0
+kadlab/kademlia/kademlia.go:397.8,397.44 1 1
+kadlab/kademlia/kademlia.go:397.44,399.3 1 1
 kadlab/kademlia/kademlia.go:403.54,405.17 2 0
 kadlab/kademlia/kademlia.go:405.17,407.3 1 0
 kadlab/kademlia/kademlia.go:409.2,412.42 2 0
@@ -156,7 +156,7 @@ kadlab/kademlia/kademlia.go:569.48,572.27 2 0
 kadlab/kademlia/kademlia.go:572.27,575.4 2 0
 kadlab/kademlia/kademlia.go:576.8,579.3 1 1
 kadlab/kademlia/kademlia.go:615.88,639.2 5 0
-kadlab/kademlia/kademlia.go:642.25,644.2 1 0
+kadlab/kademlia/kademlia.go:642.25,644.2 1 1
 kadlab/kademlia/kademlia.go:647.77,648.32 1 1
 kadlab/kademlia/kademlia.go:648.32,649.47 1 1
 kadlab/kademlia/kademlia.go:649.47,651.4 1 1
@@ -209,7 +209,7 @@ kadlab/kademlia/routingtable.go:23.52,25.2 1 1
 kadlab/kademlia/routingtable.go:28.63,35.2 3 1
 kadlab/kademlia/routingtable.go:38.96,45.98 5 1
 kadlab/kademlia/routingtable.go:45.98,46.25 1 1
-kadlab/kademlia/routingtable.go:46.25,49.4 2 1
+kadlab/kademlia/routingtable.go:46.25,49.4 2 0
 kadlab/kademlia/routingtable.go:50.3,50.33 1 1
 kadlab/kademlia/routingtable.go:50.33,53.4 2 1
 kadlab/kademlia/routingtable.go:56.2,58.30 2 1
