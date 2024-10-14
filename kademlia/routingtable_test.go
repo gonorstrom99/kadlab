@@ -1,6 +1,7 @@
 package kademlia
 
 import (
+	"log"
 	"strconv"
 	"testing"
 )
@@ -205,23 +206,23 @@ func TestIsBucketFull(t *testing.T) {
 	}
 }
 
-// func TestBucketIndex(t *testing.T) {
-// 	id1 := NewKademliaID("FFFFFFFFFF0000000000FFFFFFFFFF0000000000")
-// 	// id2 := NewKademliaID("F000000000FFFFFFFFFF0000000000FFFFFFFFFF")
-// 	id2 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+func TestBucketIndex(t *testing.T) {
+	id1 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE")
+	// id2 := NewKademliaID("F000000000FFFFFFFFFF0000000000FFFFFFFFFF")
+	id2 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
 
-// 	kademliaNode1 := CreateKademliaNode("127.0.0.1:8001")
-// 	kademliaNode1.Network.ID = *id1
-// 	kademliaNode1.RoutingTable.me.ID = id1
-// 	kademliaNode2 := CreateKademliaNode("127.0.0.1:8002")
-// 	kademliaNode2.Network.ID = *id2
-// 	kademliaNode2.RoutingTable.me.ID = id2
-// 	contact := NewContact(id2, "127.0.0.1:8002")
+	kademliaNode1 := CreateKademliaNode("127.0.0.1:8001")
+	kademliaNode1.Network.ID = *id1
+	kademliaNode1.RoutingTable.me.ID = id1
+	kademliaNode2 := CreateKademliaNode("127.0.0.1:8002")
+	kademliaNode2.Network.ID = *id2
+	kademliaNode2.RoutingTable.me.ID = id2
+	contact := NewContact(id2, "127.0.0.1:8002")
 
-// 	kademliaNode1.RoutingTable.AddContact(contact)
-// 	bucketIndex := kademliaNode1.RoutingTable.getBucketIndex(id2)
-// 	log.Printf("bucketindex is: %d", bucketIndex)
-// 	if bucketIndex != 160 {
-// 		t.Errorf("Expected bucket index to be 160 because the first bit differs")
-// 	}
-// }
+	kademliaNode1.RoutingTable.AddContact(contact)
+	bucketIndex := kademliaNode1.RoutingTable.getBucketIndex(id2)
+	log.Printf("bucketindex is: %d", bucketIndex)
+	if bucketIndex != 159 {
+		t.Errorf("Expected bucket index to be 160 because the first bit differs")
+	}
+}

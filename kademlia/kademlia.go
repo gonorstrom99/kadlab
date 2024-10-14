@@ -29,10 +29,6 @@ type Kademlia struct {
 	HandleReturnStoreValueSpy    func(contact *Contact, msg Message)
 }
 
-func TestPrinter(printThis string) {
-	log.Printf(printThis)
-}
-
 // NewKademlia creates and initializes a new Kademlia node
 func NewKademlia(network *Network, routingTable *RoutingTable, taskList []Task, storage *Storage) *Kademlia {
 	return &Kademlia{
