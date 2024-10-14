@@ -4,6 +4,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"testing"
+	"time"
 )
 
 // TestHashKademliaID tests if the KademliaID is correctly hashed using SHA-1
@@ -64,6 +65,7 @@ func TestNewRandomKademliaID(t *testing.T) {
 
 // TestLess checks the Less function for KademliaID comparison
 func TestLess(t *testing.T) {
+
 	id1 := NewKademliaID("0000000000000000000000000000000000000000")
 	id2 := NewKademliaID("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
 	id3 := NewKademliaID("0000000000000000000000000000000000000001") // Close to id1 for edge case
@@ -149,4 +151,48 @@ func TestString(t *testing.T) {
 	if id.String() != expectedString {
 		t.Errorf("Expected string to be %s, but got %s", expectedString, id.String())
 	}
+}
+
+func TestCheckTTLs(t *testing.T) {
+	// Create a Kademlia instance with a real routing table and network
+	me := NewContact(NewRandomKademliaID(), "127.0.0.1:8000")
+	routingTable := NewRoutingTable(me)
+	storage := NewStorage()
+	network := &Network{
+		ID:        *me.ID,
+		MessageCh: make(chan Message),
+	}
+	kademlia := NewKademlia(network, routingTable, []Task{}, storage)
+
+	// Set up a task with WaitingForReturns contacts
+	task := Task{
+		CommandID:      1,
+		CommandType:    "ping",
+		TargetID:       NewRandomKademliaID(),
+		ReplaceContact: NewContact(NewRandomKademliaID(), "127.0.0.1:8001"),
+		ClosestContacts: []Contact{
+			NewContact(NewRandomKademliaID(), "127.0.0.1:8002"),
+			NewContact(NewRandomKademliaID(), "127.0.0.1:8003"),
+		},
+		WaitingForReturns: []WaitingContact{
+			// First contact is older than TTL (it should time out)
+			{SentTime: time.Now().Add(-time.Duration(TTL+1) * time.Millisecond), Contact: NewContact(NewRandomKademliaID(), "127.0.0.1:8004")},
+			// Second contact is within TTL (it should not time out)
+
+		},
+	}
+
+	// Add the task to the Kademlia node's task list
+	kademlia.Tasks = append(kademlia.Tasks, task)
+	if len(kademlia.Tasks) != 1 {
+		t.Errorf("Expected 1 task in tasks, got %d", len(kademlia.Tasks))
+
+	}
+	// Call the checkTTLs method to trigger TTL check
+	kademlia.checkTTLs()
+	if len(kademlia.Tasks) != 0 {
+		t.Errorf("Expected 0 task in tasks, got %d", len(kademlia.Tasks))
+
+	}
+
 }
