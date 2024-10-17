@@ -1,0 +1,18 @@
+mode: set
+kadlab/main.go:21.13,29.33 7 0
+kadlab/main.go:29.33,35.3 1 0
+kadlab/main.go:35.8,39.3 3 0
+kadlab/main.go:42.2,44.6 2 0
+kadlab/main.go:44.6,46.21 2 0
+kadlab/main.go:46.21,54.23 3 0
+kadlab/main.go:54.23,59.25 3 0
+kadlab/main.go:59.25,67.6 3 0
+kadlab/main.go:67.11,67.33 1 0
+kadlab/main.go:67.33,72.6 4 0
+kadlab/main.go:72.11,72.32 1 0
+kadlab/main.go:72.32,81.6 2 0
+kadlab/main.go:81.11,83.6 1 0
+kadlab/main.go:84.10,84.47 1 0
+kadlab/main.go:84.47,85.10 1 0
+kadlab/main.go:86.10,89.5 1 0
+kadlab/main.go:90.9,92.9 1 0
